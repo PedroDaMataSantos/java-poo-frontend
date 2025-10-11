@@ -26,6 +26,15 @@ public class TelaPessoaCrud extends JFrame {
     private final JTextField txtCtps = new JTextField();
     private final JFormattedTextField txtDataNascimento;
     private final JComboBox<TipoPessoa> comboTipoPessoa = new JComboBox<>(TipoPessoa.values());
+    private JTextField textID;
+    private JTextField textNome;
+    private JTextField textCtps;
+    private JComboBox comboTipo;
+    private JFormattedTextField txtData;
+    private JTextField textCpfCnpj;
+    private JButton btnSalvar;
+    private JButton btnExcluir;
+    private JButton btnLimpar;
 
     public TelaPessoaCrud(PessoaService pessoaService) {
         this.pessoaService = pessoaService;
