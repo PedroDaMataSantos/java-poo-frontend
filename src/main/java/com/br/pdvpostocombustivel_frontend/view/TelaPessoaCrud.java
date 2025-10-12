@@ -41,6 +41,7 @@ public class TelaPessoaCrud extends JFrame {
     private JTextField textField4;
     private JFormattedTextField formattedTextField1;
     private JComboBox comboBox1;
+    private JTable table1;
 
     public TelaPessoaCrud(PessoaService pessoaService) {
         this.pessoaService = pessoaService;
