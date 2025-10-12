@@ -35,6 +35,12 @@ public class TelaPessoaCrud extends JFrame {
     private JButton btnSalvar;
     private JButton btnExcluir;
     private JButton btnLimpar;
+    private JTextField textField1;
+    private JTextField textField2;
+    private JTextField textField3;
+    private JTextField textField4;
+    private JFormattedTextField formattedTextField1;
+    private JComboBox comboBox1;
 
     public TelaPessoaCrud(PessoaService pessoaService) {
         this.pessoaService = pessoaService;
