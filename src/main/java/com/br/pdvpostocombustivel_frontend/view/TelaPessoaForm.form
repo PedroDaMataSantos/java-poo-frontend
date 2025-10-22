@@ -12,7 +12,7 @@
     </properties>
     <border type="none"/>
     <children>
-      <grid id="9c85d" layout-manager="GridLayoutManager" row-count="8" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="9c85d" layout-manager="GridLayoutManager" row-count="9" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="25" left="25" bottom="25" right="25"/>
         <constraints border-constraint="North"/>
         <properties>
@@ -156,7 +156,7 @@
             </properties>
           </component>
           <grid id="e884e" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-            <margin top="25" left="25" bottom="25" right="25"/>
+            <margin top="15" left="25" bottom="15" right="25"/>
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -181,7 +181,7 @@
           </grid>
           <grid id="e485" layout-manager="GridBagLayout">
             <constraints>
-              <grid row="7" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+              <grid row="7" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="true"/>
             </constraints>
             <properties>
               <background color="-131329"/>
@@ -191,7 +191,7 @@
             <children>
               <component id="1c39c" class="javax.swing.JButton" binding="btnExcluir">
                 <constraints>
-                  <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
                 </constraints>
                 <properties>
@@ -202,41 +202,9 @@
                   <text value="Excluir"/>
                 </properties>
               </component>
-              <scrollpane id="b1fd3" binding="table">
-                <constraints>
-                  <grid row="1" column="0" row-span="1" col-span="11" vsize-policy="0" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                  <gridbag weightx="0.0" weighty="1.0"/>
-                </constraints>
-                <properties>
-                  <autoscrolls value="false"/>
-                  <background color="-131329"/>
-                  <enabled value="true"/>
-                  <font name="Arial Black" size="12"/>
-                  <foreground color="-131329"/>
-                  <horizontalScrollBarPolicy value="30"/>
-                  <minimumSize width="25" height="20"/>
-                  <opaque value="true"/>
-                  <visible value="true"/>
-                </properties>
-                <border type="none">
-                  <font name="Arial Black" size="16"/>
-                </border>
-                <children>
-                  <component id="b5510" class="javax.swing.JTable" binding="table1" default-binding="true">
-                    <constraints/>
-                    <properties>
-                      <background color="-3024942"/>
-                      <columnSelectionAllowed value="false"/>
-                      <foreground color="-16777216"/>
-                      <gridColor color="-16777216"/>
-                      <selectionBackground color="-3024942"/>
-                    </properties>
-                  </component>
-                </children>
-              </scrollpane>
               <component id="52e62" class="javax.swing.JButton" binding="btnLimpar">
                 <constraints>
-                  <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
                 </constraints>
                 <properties>
@@ -262,6 +230,37 @@
               </component>
             </children>
           </grid>
+          <scrollpane id="b1fd3" binding="table">
+            <constraints>
+              <grid row="8" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <autoscrolls value="false"/>
+              <background color="-131329"/>
+              <enabled value="true"/>
+              <font name="Arial Black" size="12"/>
+              <foreground color="-16777216"/>
+              <horizontalScrollBarPolicy value="30"/>
+              <minimumSize width="100" height="100"/>
+              <opaque value="true"/>
+              <visible value="true"/>
+            </properties>
+            <border type="none">
+              <font name="Arial Black" size="16"/>
+            </border>
+            <children>
+              <component id="b5510" class="javax.swing.JTable" binding="table1" default-binding="true">
+                <constraints/>
+                <properties>
+                  <background color="-3024942"/>
+                  <columnSelectionAllowed value="false"/>
+                  <foreground color="-16777216"/>
+                  <gridColor color="-16777216"/>
+                  <selectionBackground color="-3024942"/>
+                </properties>
+              </component>
+            </children>
+          </scrollpane>
         </children>
       </grid>
     </children>
