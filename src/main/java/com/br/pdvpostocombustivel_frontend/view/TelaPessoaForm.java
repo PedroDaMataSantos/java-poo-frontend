@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.text.MaskFormatter;
 import java.awt.*;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -36,40 +38,54 @@ public class TelaPessoaForm extends JFrame {
 
         // Configurações da janela
         setTitle("Cadastro de Pessoas");
-        setSize(1000, 1000);
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setContentPane(panel1);
 
+        // Adicionar margens ao painel principal
+        panel1.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        // Configurar máscara de data no campo de data de nascimento
+        configurarMascaraData();
+
         // Configurar txtId como não editável
         txtId.setEditable(false);
 
-        // Configurar ComboBox com os valores do enum
+        // Configurar ComboBox com os valores do enum TipoPessoa
         comboTipoPessoa.setModel(new DefaultComboBoxModel<>(TipoPessoa.values()));
 
-        // Configurar tabela
+        // Configurar tabela com as colunas
         configurarTabela();
 
-        // Adicionar listeners aos botões
+        // Adicionar listeners (ações) aos botões
         btnSalvar.addActionListener(e -> salvar());
         btnExcluir.addActionListener(e -> excluir());
         btnLimpar.addActionListener(e -> limparFormulario());
 
-        // Listener para preencher formulário ao selecionar linha
+        // Listener para preencher formulário ao clicar em uma linha da tabela
         table1.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 preencherFormularioComLinhaSelecionada();
-
-
             }
         });
 
-        // Carregar dados iniciais
+        // Carregar dados iniciais da API
         atualizarTabela();
     }
 
+    private void configurarMascaraData() {
+        try {
+            MaskFormatter dateMask = new MaskFormatter("##/##/####");
+            dateMask.setPlaceholderCharacter('_');
+            dateMask.install(txtDataNascimento);
+        } catch (ParseException e) {
+            System.err.println("Erro ao configurar máscara de data: " + e.getMessage());
+        }
+    }
+
     private void configurarTabela() {
-        String[] columnNames = {"ID", "Nome Completo", "CPF/CNPJ", "CTPS", "Data Nascimento", "Tipo"};
+        String[] columnNames = {"ID", "Nome Completo", "CPF/CNPJ", "CTPS", "Data Nasc.", "Tipo"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
