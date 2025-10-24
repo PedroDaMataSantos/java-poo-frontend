@@ -27,7 +27,7 @@
           <color color="-5587511"/>
         </border>
         <children>
-          <component id="ad76c" class="javax.swing.JTextField" binding="txtCpfCnpj">
+          <component id="ad76c" class="javax.swing.JFormattedTextField" binding="txtCpfCnpj">
             <constraints>
               <grid row="3" column="1" row-span="1" col-span="4" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
@@ -128,10 +128,13 @@
               <component id="b5510" class="javax.swing.JTable" binding="table1" default-binding="true">
                 <constraints/>
                 <properties>
+                  <autoCreateRowSorter value="false"/>
                   <background color="-3024942"/>
                   <columnSelectionAllowed value="false"/>
+                  <font name="Arial Black" size="12"/>
                   <foreground color="-16777216"/>
                   <gridColor color="-16777216"/>
+                  <intercellSpacing width="2" height="2"/>
                   <selectionBackground color="-3024942"/>
                 </properties>
               </component>

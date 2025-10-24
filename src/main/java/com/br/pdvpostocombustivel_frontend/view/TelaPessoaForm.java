@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import javax.swing.text.MaskFormatter;
 import java.awt.*;
 import java.text.ParseException;
@@ -18,7 +19,9 @@ import java.util.List;
 @Component
 public class TelaPessoaForm extends JFrame {
     private JPanel panel1;
-    private JTextField txtCpfCnpj;
+    private JFormattedTextField txtCpfCnpj;
+    private MaskFormatter cpfFormatter;
+    private MaskFormatter cnpjFormatter;
     private JTextField txtCtps;
     private JFormattedTextField txtDataNascimento;
     private JComboBox<TipoPessoa> comboTipoPessoa;
@@ -46,17 +49,22 @@ public class TelaPessoaForm extends JFrame {
         // Adicionar margens ao painel principal
         panel1.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Configurar máscara de data no campo de data de nascimento
-        configurarMascaraData();
-
         // Configurar txtId como não editável
         txtId.setEditable(false);
 
         // Configurar ComboBox com os valores do enum TipoPessoa
         comboTipoPessoa.setModel(new DefaultComboBoxModel<>(TipoPessoa.values()));
 
+        // IMPORTANTE: Configurar máscaras ANTES de adicionar listeners
+        configurarMascaraData();
+        inicializarFormatadores();
+        configurarCampoCpfCnpj();
+
         // Configurar tabela com as colunas
         configurarTabela();
+
+        // Configurar header da tabela
+        configurarHeaderTabela();
 
         // Adicionar listeners (ações) aos botões
         btnSalvar.addActionListener(e -> salvar());
@@ -84,8 +92,58 @@ public class TelaPessoaForm extends JFrame {
         }
     }
 
+    private void inicializarFormatadores() {
+        try {
+            // Criar formatador de CPF (###.###.###-##)
+            cpfFormatter = new MaskFormatter("###.###.###-##");
+            cpfFormatter.setPlaceholderCharacter('_');
+            cpfFormatter.setValueContainsLiteralCharacters(false);
+
+            // Criar formatador de CNPJ (##.###.###/####-##)
+            cnpjFormatter = new MaskFormatter("##.###.###/####-##");
+            cnpjFormatter.setPlaceholderCharacter('_');
+            cnpjFormatter.setValueContainsLiteralCharacters(false);
+        } catch (ParseException e) {
+            System.err.println("Erro ao criar formatadores: " + e.getMessage());
+        }
+    }
+
+    private void configurarCampoCpfCnpj() {
+        // Começar com máscara de CPF por padrão
+        try {
+            cpfFormatter.install(txtCpfCnpj);
+        } catch (Exception e) {
+            System.err.println("Erro ao configurar campo CPF/CNPJ: " + e.getMessage());
+        }
+
+        // ✨ MUDANÇA PRINCIPAL: Listener no ComboBox de Tipo de Pessoa
+        // Quando o usuário mudar o tipo de pessoa, a máscara muda automaticamente
+        comboTipoPessoa.addActionListener(e -> {
+            TipoPessoa tipoSelecionado = (TipoPessoa) comboTipoPessoa.getSelectedItem();
+
+            if (tipoSelecionado != null) {
+                // Salvar o texto atual (apenas números, sem formatação)
+                String textoAtual = txtCpfCnpj.getText().replaceAll("[^0-9]", "");
+
+                try {
+                    if (tipoSelecionado == TipoPessoa.FISICA) {
+                        // Pessoa Física = CPF (###.###.###-##)
+                        cpfFormatter.install(txtCpfCnpj);
+                        txtCpfCnpj.setText(textoAtual);
+                    } else if (tipoSelecionado == TipoPessoa.JURIDICA) {
+                        // Pessoa Jurídica = CNPJ (##.###.###/####-##)
+                        cnpjFormatter.install(txtCpfCnpj);
+                        txtCpfCnpj.setText(textoAtual);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Erro ao trocar máscara: " + ex.getMessage());
+                }
+            }
+        });
+    }
+
     private void configurarTabela() {
-        String[] columnNames = {"ID", "Nome Completo", "CPF/CNPJ", "CTPS", "Data Nasc.", "Tipo"};
+        String[] columnNames = {"ID", "Nome Completo", "CPF/CNPJ", "CTPS", "Data Nascimento", "Tipo"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -93,6 +151,17 @@ public class TelaPessoaForm extends JFrame {
             }
         };
         table1.setModel(tableModel);
+    }
+
+    private void configurarHeaderTabela() {
+        JTableHeader header = table1.getTableHeader();
+
+        // Configurar fonte do cabeçalho
+        header.setFont(new Font("Arial Black", Font.PLAIN, 12));
+        header.setForeground(Color.BLACK);
+
+        // Altura do header
+        header.setPreferredSize(new Dimension(header.getWidth(), 25));
     }
 
     private void atualizarTabela() {
@@ -177,9 +246,12 @@ public class TelaPessoaForm extends JFrame {
             return;
         }
 
+        // ✨ MUDANÇA: Remover formatação do CPF/CNPJ antes de enviar para API
+        String cpfCnpj = txtCpfCnpj.getText().replaceAll("[^0-9]", "");
+
         PessoaRequest request = new PessoaRequest(
                 txtNome.getText(),
-                txtCpfCnpj.getText(),
+                cpfCnpj,  // Enviar apenas números (sem pontos, traços, barras)
                 numeroCtps,
                 dataNascimento,
                 (TipoPessoa) comboTipoPessoa.getSelectedItem()
@@ -276,13 +348,21 @@ public class TelaPessoaForm extends JFrame {
         if (selectedRow >= 0) {
             txtId.setText(tableModel.getValueAt(selectedRow, 0).toString());
             txtNome.setText(tableModel.getValueAt(selectedRow, 1).toString());
-            txtCpfCnpj.setText(tableModel.getValueAt(selectedRow, 2).toString());
 
             Object ctps = tableModel.getValueAt(selectedRow, 3);
             txtCtps.setText(ctps != null ? ctps.toString() : "");
 
             txtDataNascimento.setText(tableModel.getValueAt(selectedRow, 4).toString());
-            comboTipoPessoa.setSelectedItem(tableModel.getValueAt(selectedRow, 5));
+
+            // ✨ MUDANÇA IMPORTANTE: Preencher Tipo de Pessoa PRIMEIRO
+            // Isso vai disparar o listener que troca a máscara automaticamente
+            TipoPessoa tipoPessoa = (TipoPessoa) tableModel.getValueAt(selectedRow, 5);
+            comboTipoPessoa.setSelectedItem(tipoPessoa);
+
+            // DEPOIS preencher CPF/CNPJ (a máscara já estará correta!)
+            String cpfCnpj = tableModel.getValueAt(selectedRow, 2).toString();
+            String apenasNumeros = cpfCnpj.replaceAll("[^0-9]", "");
+            txtCpfCnpj.setText(apenasNumeros);
         }
     }
 
@@ -292,7 +372,15 @@ public class TelaPessoaForm extends JFrame {
         txtCpfCnpj.setText("");
         txtCtps.setText("");
         txtDataNascimento.setText("");
-        comboTipoPessoa.setSelectedIndex(0);
+        comboTipoPessoa.setSelectedIndex(0);  // Volta para o primeiro (FISICA)
         table1.clearSelection();
+
+        // ✨ MUDANÇA: Resetar para máscara de CPF ao limpar
+        // (Como o índice 0 do combo é FISICA, a máscara já será de CPF)
+        try {
+            cpfFormatter.install(txtCpfCnpj);
+        } catch (Exception e) {
+            // Ignora erro
+        }
     }
 }
