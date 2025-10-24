@@ -1,6 +1,5 @@
 package com.br.pdvpostocombustivel_frontend;
 
-import com.br.pdvpostocombustivel_frontend.view.TelaPessoaCrud; // Importa nossa tela
 import com.br.pdvpostocombustivel_frontend.view.TelaPessoaForm;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;

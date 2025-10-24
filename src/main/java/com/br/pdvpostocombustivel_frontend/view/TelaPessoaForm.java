@@ -41,7 +41,7 @@ public class TelaPessoaForm extends JFrame {
 
         // Configurações da janela
         setTitle("Cadastro de Pessoas");
-        setSize(1000, 725);
+        setSize(1000, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setContentPane(panel1);
@@ -116,30 +116,35 @@ public class TelaPessoaForm extends JFrame {
             System.err.println("Erro ao configurar campo CPF/CNPJ: " + e.getMessage());
         }
 
-        // ✨ MUDANÇA PRINCIPAL: Listener no ComboBox de Tipo de Pessoa
-        // Quando o usuário mudar o tipo de pessoa, a máscara muda automaticamente
+        // Listener no ComboBox de Tipo de Pessoa
         comboTipoPessoa.addActionListener(e -> {
             TipoPessoa tipoSelecionado = (TipoPessoa) comboTipoPessoa.getSelectedItem();
 
             if (tipoSelecionado != null) {
-                // Salvar o texto atual (apenas números, sem formatação)
+                // Salvar o texto atual (apenas números)
                 String textoAtual = txtCpfCnpj.getText().replaceAll("[^0-9]", "");
 
-                try {
-                    if (tipoSelecionado == TipoPessoa.FISICA) {
-                        // Pessoa Física = CPF (###.###.###-##)
-                        cpfFormatter.install(txtCpfCnpj);
-                        txtCpfCnpj.setText(textoAtual);
-                    } else if (tipoSelecionado == TipoPessoa.JURIDICA) {
-                        // Pessoa Jurídica = CNPJ (##.###.###/####-##)
-                        cnpjFormatter.install(txtCpfCnpj);
-                        txtCpfCnpj.setText(textoAtual);
+
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        if (tipoSelecionado == TipoPessoa.JURIDICA) {
+                            // Pessoa Jurídica = CNPJ
+                            cnpjFormatter.install(txtCpfCnpj);
+                        } else if (tipoSelecionado == TipoPessoa.FISICA) {
+                            // Pessoa Física = CPF
+                            cpfFormatter.install(txtCpfCnpj);
+                        }
+
+                        txtCpfCnpj.setText("");  // Limpar primeiro
+                        txtCpfCnpj.setText(textoAtual);  // Aplicar o texto com a nova máscara
+
+                    } catch (Exception ex) {
+                        System.err.println("Erro ao trocar máscara: " + ex.getMessage());
                     }
-                } catch (Exception ex) {
-                    System.err.println("Erro ao trocar máscara: " + ex.getMessage());
-                }
+                });
             }
         });
+
     }
 
     private void configurarTabela() {
@@ -157,7 +162,7 @@ public class TelaPessoaForm extends JFrame {
         JTableHeader header = table1.getTableHeader();
 
         // Configurar fonte do cabeçalho
-        header.setFont(new Font("Arial Black", Font.PLAIN, 12));
+        header.setFont(new Font("Arial Black", Font.BOLD, 12));
         header.setForeground(Color.BLACK);
 
         // Altura do header
