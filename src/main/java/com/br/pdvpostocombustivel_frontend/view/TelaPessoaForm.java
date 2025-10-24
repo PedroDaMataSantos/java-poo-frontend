@@ -41,7 +41,7 @@ public class TelaPessoaForm extends JFrame {
 
         // Configurações da janela
         setTitle("Cadastro de Pessoas");
-        setSize(1000, 700);
+        setSize(1000, 725);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setContentPane(panel1);
