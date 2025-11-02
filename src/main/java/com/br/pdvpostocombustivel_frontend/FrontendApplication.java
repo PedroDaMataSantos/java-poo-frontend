@@ -1,6 +1,6 @@
 package com.br.pdvpostocombustivel_frontend;
 
-import com.br.pdvpostocombustivel_frontend.view.TelaPessoaForm;
+import com.br.pdvpostocombustivel_frontend.view.TelaPrincipal;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +16,7 @@ public class FrontendApplication {
                 .run(args);
 
         SwingUtilities.invokeLater(() -> {
-            var tela = context.getBean(TelaPessoaForm.class);
+            var tela = context.getBean(TelaPrincipal.class);
             tela.setVisible(true);
         });
     }
