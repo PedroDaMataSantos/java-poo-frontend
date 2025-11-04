@@ -5,11 +5,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
-import javax.swing.SwingUtilities;
+
+import javax.swing.*;
 
 @SpringBootApplication
 public class FrontendApplication {
     public static void main(String[] args) {
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         var context = new SpringApplicationBuilder(FrontendApplication.class)
                 .headless(false)
@@ -21,8 +28,4 @@ public class FrontendApplication {
         });
     }
 
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
 }
