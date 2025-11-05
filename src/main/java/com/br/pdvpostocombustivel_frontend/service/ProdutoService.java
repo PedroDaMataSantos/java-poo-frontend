@@ -12,7 +12,7 @@ import java.util.List;
 @Service
 public class ProdutoService {
     private final RestTemplate restTemplate;
-    private static final String BASE_URL = "http://localhost:8080/api/produtos";
+    private static final String BASE_URL = "http://localhost:8080/api/v1/produtos";
 
     public ProdutoService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;

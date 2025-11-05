@@ -1,30 +1,31 @@
 package com.br.pdvpostocombustivel_frontend;
-
 import com.br.pdvpostocombustivel_frontend.view.TelaPrincipal;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
-
-import javax.swing.*;
+import org.springframework.web.client.RestTemplate;
+import javax.swing.SwingUtilities;
+import java.time.Duration;
 
 @SpringBootApplication
-public class FrontendApplication implements CommandLineRunner {
-
-    private final TelaPrincipal telaPrincipal;
-
-    public FrontendApplication(TelaPrincipal telaPrincipal) {
-        this.telaPrincipal = telaPrincipal;
-    }
+public class FrontendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(FrontendApplication.class, args);
-    }
+        var context = new SpringApplicationBuilder(FrontendApplication.class)
+                .headless(false)
+                .run(args);
 
-    @Override
-    public void run(String... args) throws Exception {
         SwingUtilities.invokeLater(() -> {
-            telaPrincipal.setVisible(true);
+            var tela = context.getBean(TelaPrincipal.class);
+            tela.setVisible(true);
         });
     }
+
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder.build();
+    }
 }
+
+

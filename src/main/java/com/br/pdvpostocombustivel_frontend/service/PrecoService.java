@@ -12,7 +12,7 @@ import java.util.List;
 @Service
 public class PrecoService {
     private final RestTemplate restTemplate;
-    private static final String BASE_URL = "http://localhost:8080/api/precos";
+    private static final String BASE_URL = "http://localhost:8080/api/v1/precos";
 
     public PrecoService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;

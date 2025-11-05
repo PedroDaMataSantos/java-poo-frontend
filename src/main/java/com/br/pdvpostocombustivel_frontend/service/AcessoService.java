@@ -14,7 +14,7 @@ import java.util.List;
 public class AcessoService {
 
     private final RestTemplate restTemplate;
-    private static final String BASE_URL = "http://localhost:8080/api/acessos";
+    private static final String BASE_URL = "http://localhost:8080/api/v1/acessos";
 
     public AcessoService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;

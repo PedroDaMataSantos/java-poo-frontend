@@ -161,7 +161,7 @@ public class TelaProdutoPanel extends JPanel {
                                 p.fornecedor(),
                                 p.categoria(),
                                 p.marca(),
-                                p.tipo()
+                                p.tipoProduto()
                         });
                     }
                 } catch (Exception e) {
