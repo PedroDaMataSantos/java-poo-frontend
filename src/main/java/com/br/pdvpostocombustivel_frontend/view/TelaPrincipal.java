@@ -10,12 +10,15 @@ import java.awt.*;
 public class TelaPrincipal extends JFrame {
 
     private final PessoaService pessoaService;
+    private final ProdutoService produtoService;
 
     public TelaPrincipal(
-            PessoaService pessoaService
+            PessoaService pessoaService,
+            ProdutoService produtoService
 
     ) {
         this.pessoaService = pessoaService;
+        this.produtoService = produtoService;
 
         configurarJanela();
         criarAbas();
@@ -35,10 +38,14 @@ public class TelaPrincipal extends JFrame {
         // Criar painéis para cada aba
         TelaPessoaPanel pessoaPanel = new TelaPessoaPanel(pessoaService);
 
+        TelaProdutoPanel produtoPanel = new TelaProdutoPanel(produtoService);
+
+
         // Adicionar abas
-        tabbedPane.addTab("👥 Pessoas", pessoaPanel);
+        tabbedPane.addTab(" Pessoas", pessoaPanel);
+        tabbedPane.addTab("Produtos", produtoPanel);
 
 
-        add(tabbedPane);
+        add(tabbedPane,BorderLayout.CENTER);
     }
 }
