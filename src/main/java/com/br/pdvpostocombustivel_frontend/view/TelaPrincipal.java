@@ -15,6 +15,7 @@ public class TelaPrincipal extends JFrame {
     private final EstoqueService estoqueService;
     private final CustoService custoService;
     private final AcessoService acessoService;
+    private final ContatoService contatoService;
 
     public TelaPrincipal(
             PessoaService pessoaService,
@@ -22,7 +23,8 @@ public class TelaPrincipal extends JFrame {
             PrecoService precoService,
             EstoqueService estoqueService,
             CustoService custoService,
-            AcessoService acessoService
+            AcessoService acessoService,
+            ContatoService contatoService
     ) {
         this.pessoaService = pessoaService;
         this.produtoService = produtoService;
@@ -30,6 +32,7 @@ public class TelaPrincipal extends JFrame {
         this.estoqueService = estoqueService;
         this.custoService = custoService;
         this.acessoService = acessoService;
+        this.contatoService = contatoService;
 
         configurarJanela();
         criarAbas();
@@ -52,6 +55,7 @@ public class TelaPrincipal extends JFrame {
         TelaEstoquePanel estoquePanel = new TelaEstoquePanel(estoqueService);
         TelaCustoPanel custoPanel = new TelaCustoPanel(custoService);
         TelaAcessoPanel acessoPanel = new TelaAcessoPanel(acessoService);
+        TelaContatoPanel contatoPanel = new TelaContatoPanel(contatoService);
 
         tabbedPane.addTab("Pessoas", pessoaPanel);
         tabbedPane.addTab("Produtos", produtoPanel);
@@ -59,6 +63,7 @@ public class TelaPrincipal extends JFrame {
         tabbedPane.addTab("Estoque", estoquePanel);
         tabbedPane.addTab("Custos", custoPanel);
         tabbedPane.addTab("Acessos", acessoPanel);
+        tabbedPane.addTab("Contatos", contatoPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
     }
