@@ -13,17 +13,23 @@ public class TelaPrincipal extends JFrame {
     private final ProdutoService produtoService;
     private final PrecoService precoService;
     private final EstoqueService estoqueService;
+    private final CustoService custoService;
+    private final AcessoService acessoService;
 
     public TelaPrincipal(
             PessoaService pessoaService,
             ProdutoService produtoService,
             PrecoService precoService,
-            EstoqueService estoqueService
+            EstoqueService estoqueService,
+            CustoService custoService,
+            AcessoService acessoService
     ) {
         this.pessoaService = pessoaService;
         this.produtoService = produtoService;
         this.precoService = precoService;
         this.estoqueService = estoqueService;
+        this.custoService = custoService;
+        this.acessoService = acessoService;
 
         configurarJanela();
         criarAbas();
@@ -40,19 +46,19 @@ public class TelaPrincipal extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Arial", Font.BOLD, 12));
 
-        // Painéis já existentes
         TelaPessoaPanel pessoaPanel = new TelaPessoaPanel(pessoaService);
         TelaProdutoPanel produtoPanel = new TelaProdutoPanel(produtoService);
-
-        // ✅ Novos painéis
         TelaPrecoPanel precoPanel = new TelaPrecoPanel(precoService);
         TelaEstoquePanel estoquePanel = new TelaEstoquePanel(estoqueService);
+        TelaCustoPanel custoPanel = new TelaCustoPanel(custoService);
+        TelaAcessoPanel acessoPanel = new TelaAcessoPanel(acessoService);
 
-        // Adicionar abas
         tabbedPane.addTab("Pessoas", pessoaPanel);
         tabbedPane.addTab("Produtos", produtoPanel);
         tabbedPane.addTab("Preços", precoPanel);
         tabbedPane.addTab("Estoque", estoquePanel);
+        tabbedPane.addTab("Custos", custoPanel);
+        tabbedPane.addTab("Acessos", acessoPanel);
 
         add(tabbedPane, BorderLayout.CENTER);
     }
