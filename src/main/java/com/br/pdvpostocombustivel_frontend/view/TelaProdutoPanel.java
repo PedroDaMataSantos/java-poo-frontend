@@ -44,61 +44,61 @@ public class TelaProdutoPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
 
-        // === Linha 1: ID e Tipo ===
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 1;
+        // ID
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(new JLabel("ID:"), gbc);
         txtId = new JTextField(10);
         txtId.setEditable(false);
-        gbc.gridx = 1; gbc.weightx = 0.5;
+        gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtId, gbc);
 
+        // Tipo Produto (mesma linha)
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Tipo:"), gbc);
         comboTipoProduto = new JComboBox<>(TipoProduto.values());
-        gbc.gridx = 3; gbc.weightx = 0.5;
+        gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(comboTipoProduto, gbc);
 
-        // === Linha 2: Nome ===
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
+        // Nome (linha 1 full width like Pessoa)
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
         formPanel.add(new JLabel("Nome:*"), gbc);
         txtNome = new JTextField();
-        gbc.gridx = 1; gbc.gridwidth = 3;
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtNome, gbc);
         gbc.gridwidth = 1;
 
-        // === Linha 3: Referência ===
-        gbc.gridx = 0; gbc.gridy = 2;
+        // Referência (linha 2 full width)
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Referência:*"), gbc);
         txtReferencia = new JTextField();
-        gbc.gridx = 1; gbc.gridwidth = 3;
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtReferencia, gbc);
         gbc.gridwidth = 1;
 
-        // === Linha 4: Fornecedor e Marca (lado a lado) ===
-        gbc.gridx = 0; gbc.gridy = 3;
+        // Fornecedor e Marca (linha 3, lado a lado)
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
         formPanel.add(new JLabel("Fornecedor:*"), gbc);
         txtFornecedor = new JTextField();
-        gbc.gridx = 1; gbc.weightx = 0.5;
+        gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtFornecedor, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Marca:*"), gbc);
         txtMarca = new JTextField();
-        gbc.gridx = 3; gbc.weightx = 0.5;
+        gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(txtMarca, gbc);
 
-        // === Linha 5: Categoria (sozinha) ===
-        gbc.gridx = 0; gbc.gridy = 4;
+        // Categoria (linha 4 full width)
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
         formPanel.add(new JLabel("Categoria:*"), gbc);
         txtCategoria = new JTextField();
-        gbc.gridx = 1; gbc.gridwidth = 3;
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtCategoria, gbc);
         gbc.gridwidth = 1;
 
-        // === Linha 6: Botões ===
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        // Botões (linha 5)
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnSalvar = new JButton("💾 Salvar");
         btnExcluir = new JButton("🗑️ Excluir");
         btnLimpar = new JButton("🔄 Limpar");
@@ -113,6 +113,7 @@ public class TelaProdutoPanel extends JPanel {
 
         gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 4;
         formPanel.add(buttonPanel, gbc);
+        gbc.gridwidth = 1;
 
         add(formPanel, BorderLayout.NORTH);
     }
@@ -120,10 +121,7 @@ public class TelaProdutoPanel extends JPanel {
     private void criarTabela() {
         String[] colunas = {"ID", "Nome", "Referência", "Fornecedor", "Categoria", "Marca", "Tipo Produto"};
         tableModel = new DefaultTableModel(colunas, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            @Override public boolean isCellEditable(int row, int column) { return false; }
         };
 
         table = new JTable(tableModel);
@@ -161,7 +159,7 @@ public class TelaProdutoPanel extends JPanel {
                                 p.fornecedor(),
                                 p.categoria(),
                                 p.marca(),
-                                p.tipoProduto().getDescricao()
+                                p.tipoProduto() != null ? p.tipoProduto().getDescricao() : ""
                         });
                     }
                 } catch (Exception e) {

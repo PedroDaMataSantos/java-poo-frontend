@@ -23,6 +23,12 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.toedter</groupId>
+            <artifactId>jcalendar</artifactId>
+            <version>1.4</version>
+        </dependency>
         <!-- Core do Spring (Sem servidor web) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

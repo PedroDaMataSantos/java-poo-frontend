@@ -11,14 +11,19 @@ public class TelaPrincipal extends JFrame {
 
     private final PessoaService pessoaService;
     private final ProdutoService produtoService;
+    private final PrecoService precoService;
+    private final EstoqueService estoqueService;
 
     public TelaPrincipal(
             PessoaService pessoaService,
-            ProdutoService produtoService
-
+            ProdutoService produtoService,
+            PrecoService precoService,
+            EstoqueService estoqueService
     ) {
         this.pessoaService = pessoaService;
         this.produtoService = produtoService;
+        this.precoService = precoService;
+        this.estoqueService = estoqueService;
 
         configurarJanela();
         criarAbas();
@@ -35,17 +40,20 @@ public class TelaPrincipal extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Arial", Font.BOLD, 12));
 
-        // Criar painéis para cada aba
+        // Painéis já existentes
         TelaPessoaPanel pessoaPanel = new TelaPessoaPanel(pessoaService);
-
         TelaProdutoPanel produtoPanel = new TelaProdutoPanel(produtoService);
 
+        // ✅ Novos painéis
+        TelaPrecoPanel precoPanel = new TelaPrecoPanel(precoService);
+        TelaEstoquePanel estoquePanel = new TelaEstoquePanel(estoqueService);
 
         // Adicionar abas
-        tabbedPane.addTab(" Pessoas", pessoaPanel);
+        tabbedPane.addTab("Pessoas", pessoaPanel);
         tabbedPane.addTab("Produtos", produtoPanel);
+        tabbedPane.addTab("Preços", precoPanel);
+        tabbedPane.addTab("Estoque", estoquePanel);
 
-
-        add(tabbedPane,BorderLayout.CENTER);
+        add(tabbedPane, BorderLayout.CENTER);
     }
 }
