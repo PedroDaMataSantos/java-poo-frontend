@@ -5,6 +5,8 @@ import com.br.pdvpostocombustivel_frontend.model.dto.PrecoResponse;
 import com.br.pdvpostocombustivel_frontend.service.PrecoService;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.text.MaskFormatter;
@@ -32,6 +34,9 @@ public class TelaPrecoPanel extends JPanel {
     // formatadores
     private MaskFormatter dateFormatter;
     private MaskFormatter timeFormatter;
+
+    // ===== ALTERAÇÃO 1: Flag para controlar formatação =====
+    private boolean isFormatting = false;
 
     public TelaPrecoPanel(PrecoService precoService) {
         this.precoService = precoService;
@@ -93,6 +98,9 @@ public class TelaPrecoPanel extends JPanel {
         formPanel.add(txtValor, gbc);
         gbc.gridwidth = 1;
 
+        // ===== ALTERAÇÃO 2: Adicionar formatação monetária ao campo txtValor =====
+        adicionarFormatacaoMonetaria(txtValor);
+
         // Data Alteração (linha 2, lado a lado com Hora)
         gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Data Alteração:"), gbc);
@@ -128,6 +136,103 @@ public class TelaPrecoPanel extends JPanel {
         gbc.gridwidth = 1;
 
         add(formPanel, BorderLayout.NORTH);
+    }
+
+    // ===== ALTERAÇÃO 3: Método novo para adicionar formatação monetária =====
+    private void adicionarFormatacaoMonetaria(JTextField campo) {
+        campo.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                formatarValor();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                formatarValor();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                formatarValor();
+            }
+
+            private void formatarValor() {
+                if (isFormatting) return;
+
+                SwingUtilities.invokeLater(() -> {
+                    isFormatting = true;
+                    try {
+                        String texto = campo.getText();
+                        int caretPosition = campo.getCaretPosition();
+
+                        // Remove tudo exceto números e vírgula
+                        String apenasNumeros = texto.replaceAll("[^0-9,]", "");
+
+                        // Se está vazio, limpa o campo
+                        if (apenasNumeros.isEmpty()) {
+                            campo.setText("");
+                            return;
+                        }
+
+                        // Verifica se tem vírgula
+                        if (apenasNumeros.contains(",")) {
+                            String[] partes = apenasNumeros.split(",", 2);
+                            String parteInteira = partes[0];
+                            String parteDecimal = partes.length > 1 ? partes[1] : "";
+
+                            // Limita centavos a 2 dígitos
+                            if (parteDecimal.length() > 2) {
+                                parteDecimal = parteDecimal.substring(0, 2);
+                            }
+
+                            // Formata a parte inteira com pontos
+                            String inteiraFormatada = formatarParteInteira(parteInteira);
+
+                            // Monta o valor formatado
+                            String valorFormatado = "R$ " + inteiraFormatada + "," + parteDecimal;
+
+                            campo.setText(valorFormatado);
+
+                            // Mantém o cursor após a vírgula ou no final
+                            int novaPosicao = Math.min(valorFormatado.length(), caretPosition);
+                            campo.setCaretPosition(novaPosicao);
+                        } else {
+                            // Sem vírgula: formata apenas a parte inteira, SEM adicionar ,00
+                            String inteiraFormatada = formatarParteInteira(apenasNumeros);
+                            String valorFormatado = "R$ " + inteiraFormatada;
+
+                            campo.setText(valorFormatado);
+
+                            // Posiciona o cursor no final
+                            campo.setCaretPosition(valorFormatado.length());
+                        }
+                    } finally {
+                        isFormatting = false;
+                    }
+                });
+            }
+
+            private String formatarParteInteira(String numero) {
+                if (numero.isEmpty()) return "0";
+
+                // Remove zeros à esquerda, exceto se for só zero
+                numero = numero.replaceFirst("^0+(?!$)", "");
+
+                // Adiciona pontos de milhar
+                StringBuilder resultado = new StringBuilder();
+                int count = 0;
+                for (int i = numero.length() - 1; i >= 0; i--) {
+                    if (count == 3) {
+                        resultado.insert(0, ".");
+                        count = 0;
+                    }
+                    resultado.insert(0, numero.charAt(i));
+                    count++;
+                }
+
+                return resultado.toString();
+            }
+        });
     }
 
     private void criarTabela() {
@@ -219,11 +324,21 @@ public class TelaPrecoPanel extends JPanel {
             return;
         }
 
-        // montar valor BigDecimal
+        // ===== ALTERAÇÃO 4: Ajuste na extração do valor =====
         BigDecimal valor;
         try {
-            String v = txtValor.getText().trim().replaceAll("[^0-9,\\.]", "");
-            // aceita tanto 1.234,56 ou 1234.56
+            String v = txtValor.getText().trim();
+            // Remove "R$" e espaços
+            v = v.replace("R$", "").trim();
+            // Remove pontos de milhar
+            v = v.replace(".", "");
+
+            // Se não tem vírgula, adiciona ,00
+            if (!v.contains(",")) {
+                v = v + ",00";
+            }
+
+            // Troca vírgula por ponto para BigDecimal
             v = v.replace(",", ".");
             valor = new BigDecimal(v);
         } catch (Exception e) {
@@ -313,7 +428,12 @@ public class TelaPrecoPanel extends JPanel {
             txtId.setText(tableModel.getValueAt(row, 0).toString());
             Object tipoObj = tableModel.getValueAt(row, 1);
             comboTipo.setSelectedItem(tipoObj != null ? tipoObj.toString() : comboTipo.getItemAt(0));
+
+            // ===== ALTERAÇÃO 5: Desabilita formatação temporariamente ao preencher =====
+            isFormatting = true;
             txtValor.setText(tableModel.getValueAt(row, 2).toString());
+            isFormatting = false;
+
             txtDataAlteracao.setText(tableModel.getValueAt(row, 3).toString());
             txtHoraAlteracao.setText(tableModel.getValueAt(row, 4).toString());
         }
