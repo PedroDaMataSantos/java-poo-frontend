@@ -2,10 +2,14 @@ package com.br.pdvpostocombustivel_frontend.view;
 
 import com.br.pdvpostocombustivel_frontend.model.dto.EstoqueRequest;
 import com.br.pdvpostocombustivel_frontend.model.dto.EstoqueResponse;
+import com.br.pdvpostocombustivel_frontend.model.dto.ProdutoResponse;
 import com.br.pdvpostocombustivel_frontend.model.enums.TipoEstoque;
 import com.br.pdvpostocombustivel_frontend.service.EstoqueService;
+import com.br.pdvpostocombustivel_frontend.service.ProdutoService;
 
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -20,7 +24,6 @@ import java.util.List;
 
 public class TelaEstoquePanel extends JPanel {
 
-    // CONSTANTE DO LIMITE DO TANQUE
     private static final BigDecimal LIMITE_TANQUE = new BigDecimal("60000");
 
     private JFormattedTextField txtDataValidade;
@@ -28,9 +31,10 @@ public class TelaEstoquePanel extends JPanel {
     private JTextField txtLocalTanque;
     private JTextField txtLoteEndereco;
     private JTextField txtLoteFabricacao;
-    // REMOVIDO: comboTipo
-    private JLabel lblTipoCalculado; // NOVO: Label para mostrar o tipo calculado
-    private JProgressBar progressBar; // NOVO: Barra de progresso visual
+    private JComboBox<ProdutoComboItem> comboProduto;
+    private JLabel lblTipoCalculado;
+    private JLabel lblPercentual;
+    private JProgressBar progressBar;
     private JTextField txtId;
 
     private JButton btnSalvar;
@@ -41,18 +45,36 @@ public class TelaEstoquePanel extends JPanel {
     private DefaultTableModel tableModel;
 
     private final EstoqueService estoqueService;
+    private ProdutoService produtoService;
 
     private MaskFormatter dateFormatter;
-    private boolean isFormatting = false;
+    private List<ProdutoResponse> produtosDisponiveis;
 
+    /**
+     * Construtor padrão: cria um ProdutoService com RestTemplate para uso standalone.
+     * Se você estiver integrando com injeção Spring, use o outro construtor.
+     */
     public TelaEstoquePanel(EstoqueService estoqueService) {
+        this(estoqueService, new ProdutoService(new org.springframework.web.client.RestTemplate()));
+    }
+
+    public TelaEstoquePanel(EstoqueService estoqueService, ProdutoService produtoService) {
         this.estoqueService = estoqueService;
+        this.produtoService = produtoService != null ? produtoService
+                : new ProdutoService(new org.springframework.web.client.RestTemplate());
+        this.produtosDisponiveis = java.util.List.of();
+
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         inicializarFormatadores();
         criarFormulario();
         criarTabela();
+        adicionarListenerDeAbas();
+
+        // Carrega produtos imediatamente (assíncrono)
+        carregarProdutosAsync();
+
         atualizarTabela();
     }
 
@@ -66,6 +88,88 @@ public class TelaEstoquePanel extends JPanel {
         }
     }
 
+    private void adicionarListenerDeAbas() {
+        addAncestorListener(new AncestorListener() {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+                // Recarrega apenas se não houver produtos carregados (evita chamadas repetidas)
+                if (produtoService != null && (produtosDisponiveis == null || produtosDisponiveis.isEmpty())) {
+                    carregarProdutosAsync();
+                }
+            }
+
+            @Override
+            public void ancestorRemoved(AncestorEvent event) { }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) { }
+        });
+    }
+
+    private void carregarProdutosAsync() {
+        if (produtoService == null) {
+            System.err.println("ProdutoService não inicializado. Não é possível carregar produtos.");
+            return;
+        }
+
+        new SwingWorker<List<ProdutoResponse>, Void>() {
+            @Override
+            protected List<ProdutoResponse> doInBackground() throws Exception {
+                return produtoService.listarProdutos();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<ProdutoResponse> list = get();
+                    produtosDisponiveis = list != null ? list : List.of();
+                    System.out.println("Produtos carregados: " + produtosDisponiveis.size());
+                    preencherComboProdutos();
+                } catch (Exception e) {
+                    System.err.println("Erro ao carregar produtos: " + e.getMessage());
+                    e.printStackTrace();
+                    produtosDisponiveis = List.of();
+                    preencherComboProdutos(); // garante que o combo seja resetado
+                }
+            }
+        }.execute();
+    }
+
+    private void preencherComboProdutos() {
+        comboProduto.removeAllItems();
+        comboProduto.addItem(new ProdutoComboItem(null, "-- Selecione um Produto --"));
+
+        if (produtosDisponiveis == null || produtosDisponiveis.isEmpty()) {
+            System.out.println("Nenhum produto disponível para preencher o combo.");
+            comboProduto.setSelectedIndex(0);
+            return;
+        }
+
+        for (ProdutoResponse p : produtosDisponiveis) {
+            String nomeExibicao = safeNomeProduto(p);
+            comboProduto.addItem(new ProdutoComboItem(p.id(), nomeExibicao));
+        }
+
+        // garante que o índice 0 (placeholder) esteja selecionado após preencher
+        comboProduto.setSelectedIndex(0);
+
+        System.out.println("Combo preenchido com " + comboProduto.getItemCount() + " itens");
+    }
+
+    // Helper para montar a string de exibição com segurança contra nulls
+    private String safeNomeProduto(ProdutoResponse p) {
+        if (p == null) return "Produto inválido";
+        String nome = p.nome() != null ? p.nome() : "Sem nome";
+        try {
+            if (p.tipoProduto() != null) {
+                nome += " - " + p.tipoProduto().getDescricao();
+            }
+        } catch (Exception ignore) {
+            // caso p.tipoProduto() não exista ou esteja em formato inesperado
+        }
+        return nome;
+    }
+
     private void criarFormulario() {
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(BorderFactory.createTitledBorder("Cadastro de Estoque"));
@@ -73,7 +177,6 @@ public class TelaEstoquePanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // ID
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(new JLabel("ID:"), gbc);
         txtId = new JTextField(10);
@@ -81,7 +184,6 @@ public class TelaEstoquePanel extends JPanel {
         gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtId, gbc);
 
-        // NOVO: Status do Tanque (Campo inativo como ID)
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Status:"), gbc);
         lblTipoCalculado = new JLabel("---");
@@ -95,34 +197,36 @@ public class TelaEstoquePanel extends JPanel {
         gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(lblTipoCalculado, gbc);
 
-        // Local Tanque (linha 1 full width)
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
+        formPanel.add(new JLabel("Produto:*"), gbc);
+        comboProduto = new JComboBox<>();
+        comboProduto.addItem(new ProdutoComboItem(null, "-- Selecione um Produto --"));
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
+        formPanel.add(comboProduto, gbc);
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Local Tanque:*"), gbc);
         txtLocalTanque = new JTextField();
         gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtLocalTanque, gbc);
         gbc.gridwidth = 1;
 
-        // Quantidade (linha 2, lado esquerdo)
-        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
         formPanel.add(new JLabel("Quantidade (L):*"), gbc);
         txtQuantidade = new JTextField();
         gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtQuantidade, gbc);
-
-        // Adicionar listener para calcular tipo automaticamente e formatar com "L"
         adicionarCalculoAutomatico();
-        adicionarFormatacaoLitros();
 
-        // Lote Endereço (ao lado direito)
         gbc.gridx = 2; gbc.weightx = 0;
-        formPanel.add(new JLabel("Lote Endereço:"), gbc);
-        txtLoteEndereco = new JTextField();
+        formPanel.add(new JLabel("Capacidade:"), gbc);
+        lblPercentual = new JLabel("0% (0/60.000L)");
+        lblPercentual.setFont(new Font("Arial", Font.PLAIN, 11));
         gbc.gridx = 3; gbc.weightx = 0.3;
-        formPanel.add(txtLoteEndereco, gbc);
+        formPanel.add(lblPercentual, gbc);
 
-        // NOVO: Barra de progresso visual (linha 3, full width)
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
         formPanel.add(new JLabel("Nível:"), gbc);
         progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
@@ -131,14 +235,12 @@ public class TelaEstoquePanel extends JPanel {
         formPanel.add(progressBar, gbc);
         gbc.gridwidth = 1;
 
-        // Lote Endereço (linha 4, lado esquerdo)
-        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0;
         formPanel.add(new JLabel("Lote Endereço:"), gbc);
         txtLoteEndereco = new JTextField();
         gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtLoteEndereco, gbc);
 
-        // Data Validade (linha 4, lado direito)
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Data Validade:"), gbc);
         txtDataValidade = new JFormattedTextField();
@@ -146,15 +248,13 @@ public class TelaEstoquePanel extends JPanel {
         gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(txtDataValidade, gbc);
 
-        // Lote Fabricação (linha 5, full width)
-        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0;
+        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
         formPanel.add(new JLabel("Lote Fabricação:"), gbc);
         txtLoteFabricacao = new JTextField();
         gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtLoteFabricacao, gbc);
         gbc.gridwidth = 1;
 
-        // Botões (linha 6)
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnSalvar = new JButton("💾 Salvar");
         btnExcluir = new JButton("🗑️ Excluir");
@@ -168,63 +268,13 @@ public class TelaEstoquePanel extends JPanel {
         buttonPanel.add(btnExcluir);
         buttonPanel.add(btnLimpar);
 
-        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 4;
+        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 4;
         formPanel.add(buttonPanel, gbc);
         gbc.gridwidth = 1;
 
         add(formPanel, BorderLayout.NORTH);
     }
 
-    // NOVO MÉTODO: Adiciona formatação com "L" no final
-    private void adicionarFormatacaoLitros() {
-        txtQuantidade.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                formatarComLitros();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                formatarComLitros();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                formatarComLitros();
-            }
-
-            private void formatarComLitros() {
-                if (isFormatting) return;
-
-                SwingUtilities.invokeLater(() -> {
-                    isFormatting = true;
-                    try {
-                        String texto = txtQuantidade.getText();
-
-                        // Remove tudo exceto números, vírgula e ponto
-                        String apenasNumeros = texto.replaceAll("[^0-9,\\.]", "");
-
-                        if (apenasNumeros.isEmpty()) {
-                            txtQuantidade.setText("");
-                            return;
-                        }
-
-                        // Adiciona " L" no final se não tiver
-                        if (!texto.trim().endsWith("L")) {
-                            int caretPos = txtQuantidade.getCaretPosition();
-                            txtQuantidade.setText(apenasNumeros + " L");
-                            // Posiciona cursor antes do " L"
-                            txtQuantidade.setCaretPosition(Math.min(caretPos, apenasNumeros.length()));
-                        }
-                    } finally {
-                        isFormatting = false;
-                    }
-                });
-            }
-        });
-    }
-
-    // NOVO MÉTODO: Adiciona cálculo automático do tipo
     private void adicionarCalculoAutomatico() {
         txtQuantidade.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -244,71 +294,57 @@ public class TelaEstoquePanel extends JPanel {
         });
     }
 
-    // NOVO MÉTODO: Calcula tipo e percentual automaticamente
     private void calcularTipoEPercentual() {
         SwingUtilities.invokeLater(() -> {
             try {
                 String texto = txtQuantidade.getText().trim();
-                // Remove " L" para processar
-                texto = texto.replace(" L", "").trim();
-
                 if (texto.isEmpty()) {
                     lblTipoCalculado.setText("---");
                     lblTipoCalculado.setForeground(Color.BLACK);
-                    lblTipoCalculado.setBackground(new Color(240, 240, 240));
+                    lblPercentual.setText("0% (0/60.000L)");
                     progressBar.setValue(0);
                     progressBar.setForeground(Color.GRAY);
-                    progressBar.setString("0%");
                     return;
                 }
 
-                // Remove caracteres não numéricos exceto vírgula e ponto
                 String numeros = texto.replaceAll("[^0-9,\\.]", "");
                 numeros = numeros.replace(",", ".");
 
                 BigDecimal quantidade = new BigDecimal(numeros);
 
-                // Valida se não ultrapassa o limite
                 if (quantidade.compareTo(LIMITE_TANQUE) > 0) {
                     lblTipoCalculado.setText("EXCEDE LIMITE!");
-                    lblTipoCalculado.setForeground(Color.WHITE);
-                    lblTipoCalculado.setBackground(Color.RED);
+                    lblTipoCalculado.setForeground(Color.RED);
+                    lblPercentual.setText("MÁXIMO: 60.000L");
                     progressBar.setValue(100);
                     progressBar.setForeground(Color.RED);
-                    progressBar.setString("MÁXIMO: 60.000L");
                     return;
                 }
 
-                // Calcula percentual
                 BigDecimal percentual = quantidade
                         .multiply(new BigDecimal("100"))
                         .divide(LIMITE_TANQUE, 2, RoundingMode.HALF_UP);
 
-                // Determina o tipo
                 TipoEstoque tipo = calcularTipo(quantidade);
 
-                // Atualiza label do tipo
                 lblTipoCalculado.setText(tipo.getDescricao());
-                lblTipoCalculado.setForeground(Color.WHITE);
-                lblTipoCalculado.setBackground(getCorPorTipo(tipo));
+                lblTipoCalculado.setForeground(getCorPorTipo(tipo));
 
-                // Atualiza barra de progresso
+                lblPercentual.setText(String.format("%.1f%% (%.0f/60.000L)",
+                        percentual.doubleValue(), quantidade.doubleValue()));
+
                 progressBar.setValue(percentual.intValue());
                 progressBar.setForeground(getCorPorTipo(tipo));
-                progressBar.setString(String.format("%.1f%% (%.0f/60.000L)",
-                        percentual.doubleValue(), quantidade.doubleValue()));
 
             } catch (Exception ex) {
                 lblTipoCalculado.setText("---");
                 lblTipoCalculado.setForeground(Color.BLACK);
-                lblTipoCalculado.setBackground(new Color(240, 240, 240));
+                lblPercentual.setText("Valor inválido");
                 progressBar.setValue(0);
-                progressBar.setString("Valor inválido");
             }
         });
     }
 
-    // NOVO MÉTODO: Calcula o tipo baseado na quantidade
     private TipoEstoque calcularTipo(BigDecimal quantidade) {
         if (quantidade == null || quantidade.compareTo(BigDecimal.ZERO) == 0) {
             return TipoEstoque.INDISPONIVEL;
@@ -329,18 +365,17 @@ public class TelaEstoquePanel extends JPanel {
         }
     }
 
-    // NOVO MÉTODO: Retorna cor por tipo
     private Color getCorPorTipo(TipoEstoque tipo) {
         return switch (tipo) {
-            case OK -> new Color(34, 139, 34); // Verde
-            case BAIXO -> new Color(255, 165, 0); // Laranja
-            case CRITICO -> new Color(255, 69, 0); // Vermelho
+            case OK -> new Color(34, 139, 34);
+            case BAIXO -> new Color(255, 165, 0);
+            case CRITICO -> new Color(255, 69, 0);
             case INDISPONIVEL -> Color.GRAY;
         };
     }
 
     private void criarTabela() {
-        String[] colunas = {"ID", "Quantidade", "Local Tanque", "Lote End.", "Lote Fabr.", "Data Val.", "Status"};
+        String[] colunas = {"ID", "Produto", "Quantidade", "Local Tanque", "Lote End.", "Lote Fabr.", "Data Val.", "Status"};
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -371,11 +406,13 @@ public class TelaEstoquePanel extends JPanel {
                 try {
                     List<EstoqueResponse> list = get();
                     tableModel.setRowCount(0);
-                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
                     for (EstoqueResponse r : list) {
+                        String nomeProduto = obterNomeProduto(r.idProduto());
+
                         tableModel.addRow(new Object[]{
                                 r.id(),
+                                nomeProduto,
                                 String.format("%.2f L", r.quantidade()),
                                 r.localTanque(),
                                 r.loteEndereco(),
@@ -396,9 +433,32 @@ public class TelaEstoquePanel extends JPanel {
         }.execute();
     }
 
+    private String obterNomeProduto(Long idProduto) {
+        if (produtosDisponiveis == null || produtosDisponiveis.isEmpty()) {
+            return "Produto não carregado";
+        }
+        return produtosDisponiveis.stream()
+                .filter(p -> p.id() != null && p.id().equals(idProduto))
+                .map(p -> {
+                    try {
+                        return p.nome() + " - " + (p.tipoProduto() != null ? p.tipoProduto().getDescricao() : "");
+                    } catch (Exception ex) {
+                        return p.nome();
+                    }
+                })
+                .findFirst()
+                .orElse("Produto não encontrado");
+    }
+
     private void salvar() {
         if (txtQuantidade.getText().isBlank() || txtLocalTanque.getText().isBlank()) {
             JOptionPane.showMessageDialog(this, "Quantidade e Local Tanque são obrigatórios.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        ProdutoComboItem itemSelecionado = (ProdutoComboItem) comboProduto.getSelectedItem();
+        if (itemSelecionado == null || itemSelecionado.getId() == null) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto!", "Erro", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -409,21 +469,17 @@ public class TelaEstoquePanel extends JPanel {
             protected Void doInBackground() throws Exception {
                 BigDecimal quantidade;
                 try {
-                    String q = txtQuantidade.getText().trim();
-                    // Remove " L" e outros caracteres
-                    q = q.replace(" L", "").replaceAll("[^0-9,\\.]", "");
+                    String q = txtQuantidade.getText().trim().replaceAll("[^0-9,\\.]", "");
                     q = q.replace(",", ".");
                     quantidade = new BigDecimal(q);
                 } catch (Exception ex) {
                     throw new RuntimeException("Quantidade inválida");
                 }
 
-                // VALIDAÇÃO: Verifica se não ultrapassa o limite
                 if (quantidade.compareTo(LIMITE_TANQUE) > 0) {
                     throw new RuntimeException("Quantidade não pode ultrapassar 60.000 litros!");
                 }
 
-                // Data de validade
                 java.util.Date dataValidade = null;
                 String dataText = txtDataValidade.getText().replace("_", "").trim();
                 if (!dataText.isEmpty()) {
@@ -432,14 +488,13 @@ public class TelaEstoquePanel extends JPanel {
                     );
                 }
 
-                // CRIA O REQUEST SEM O TIPO (será calculado no backend)
                 EstoqueRequest req = new EstoqueRequest(
                         quantidade,
                         txtLocalTanque.getText(),
                         txtLoteEndereco.getText().isBlank() ? null : txtLoteEndereco.getText(),
                         txtLoteFabricacao.getText().isBlank() ? null : txtLoteFabricacao.getText(),
-                        dataValidade
-
+                        dataValidade,
+                        itemSelecionado.getId()
                 );
 
                 if (id == null) {
@@ -456,6 +511,8 @@ public class TelaEstoquePanel extends JPanel {
                     get();
                     JOptionPane.showMessageDialog(TelaEstoquePanel.this, "Estoque salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                     limparFormulario();
+                    // recarrega produtos e tabela para garantir consistência visual
+                    carregarProdutosAsync();
                     atualizarTabela();
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(TelaEstoquePanel.this, "Erro ao salvar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
@@ -487,6 +544,7 @@ public class TelaEstoquePanel extends JPanel {
                         get();
                         JOptionPane.showMessageDialog(TelaEstoquePanel.this, "Estoque excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                         limparFormulario();
+                        carregarProdutosAsync();
                         atualizarTabela();
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(TelaEstoquePanel.this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
@@ -501,15 +559,15 @@ public class TelaEstoquePanel extends JPanel {
         if (row >= 0) {
             txtId.setText(tableModel.getValueAt(row, 0).toString());
 
-            // Extrai apenas o número da quantidade (remove "L")
-            String quantidadeStr = tableModel.getValueAt(row, 1).toString();
+            String quantidadeStr = tableModel.getValueAt(row, 2).toString();
             quantidadeStr = quantidadeStr.replace(" L", "").trim();
             txtQuantidade.setText(quantidadeStr);
 
-            txtLocalTanque.setText(tableModel.getValueAt(row, 2).toString());
-            txtLoteEndereco.setText(tableModel.getValueAt(row, 3) != null ? tableModel.getValueAt(row, 3).toString() : "");
-            txtLoteFabricacao.setText(tableModel.getValueAt(row, 4) != null ? tableModel.getValueAt(row, 4).toString() : "");
-            Object dt = tableModel.getValueAt(row, 5);
+            txtLocalTanque.setText(tableModel.getValueAt(row, 3).toString());
+            txtLoteEndereco.setText(tableModel.getValueAt(row, 4) != null ? tableModel.getValueAt(row, 4).toString() : "");
+            txtLoteFabricacao.setText(tableModel.getValueAt(row, 5) != null ? tableModel.getValueAt(row, 5).toString() : "");
+
+            Object dt = tableModel.getValueAt(row, 6);
             if (dt instanceof java.util.Date) {
                 txtDataValidade.setValue(dt);
             } else if (dt != null) {
@@ -517,10 +575,26 @@ public class TelaEstoquePanel extends JPanel {
             } else {
                 txtDataValidade.setText("");
             }
-            // REMOVIDO: comboTipo.setSelectedItem
 
-            // Atualiza os indicadores visuais
+            Long idEstoque = (Long) tableModel.getValueAt(row, 0);
+            try {
+                EstoqueResponse estoque = estoqueService.getById(idEstoque);
+                selecionarProdutoNoCombo(estoque.idProduto());
+            } catch (Exception e) {
+                System.err.println("Erro ao buscar produto do estoque: " + e.getMessage());
+            }
+
             calcularTipoEPercentual();
+        }
+    }
+
+    private void selecionarProdutoNoCombo(Long idProduto) {
+        for (int i = 0; i < comboProduto.getItemCount(); i++) {
+            ProdutoComboItem item = comboProduto.getItemAt(i);
+            if (item.getId() != null && item.getId().equals(idProduto)) {
+                comboProduto.setSelectedIndex(i);
+                break;
+            }
         }
     }
 
@@ -531,12 +605,31 @@ public class TelaEstoquePanel extends JPanel {
         txtLoteEndereco.setText("");
         txtLoteFabricacao.setText("");
         txtDataValidade.setText("");
+        comboProduto.setSelectedIndex(0);
         lblTipoCalculado.setText("---");
         lblTipoCalculado.setForeground(Color.BLACK);
-        lblTipoCalculado.setBackground(new Color(240, 240, 240));
+        lblPercentual.setText("0% (0/60.000L)");
         progressBar.setValue(0);
         progressBar.setForeground(Color.GRAY);
-        progressBar.setString("0%");
         table.clearSelection();
+    }
+
+    private static class ProdutoComboItem {
+        private final Long id;
+        private final String nome;
+
+        public ProdutoComboItem(Long id, String nome) {
+            this.id = id;
+            this.nome = nome;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return nome;
+        }
     }
 }
