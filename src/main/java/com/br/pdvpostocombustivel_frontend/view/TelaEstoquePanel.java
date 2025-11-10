@@ -133,62 +133,84 @@ public class TelaEstoquePanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        // ID e Status (linha 0, lado a lado)
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(new JLabel("ID:"), gbc);
         txtId = new JTextField(10);
         txtId.setEditable(false);
-        gbc.gridx = 1; formPanel.add(txtId, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.3;
+        formPanel.add(txtId, gbc);
 
-        gbc.gridx = 2; formPanel.add(new JLabel("Status:"), gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        formPanel.add(new JLabel("Status:"), gbc);
         lblTipoCalculado = new JLabel("---");
         lblTipoCalculado.setFont(new Font("Arial", Font.BOLD, 12));
         lblTipoCalculado.setOpaque(true);
-        gbc.gridx = 3; formPanel.add(lblTipoCalculado, gbc);
+        gbc.gridx = 3; gbc.weightx = 0.3;
+        formPanel.add(lblTipoCalculado, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        // Produto (linha 1, full width)
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
         formPanel.add(new JLabel("Produto:*"), gbc);
         comboProduto = new JComboBox<>();
-        gbc.gridx = 1; gbc.gridwidth = 3; formPanel.add(comboProduto, gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
+        formPanel.add(comboProduto, gbc);
         gbc.gridwidth = 1;
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        // Local Tanque (linha 2, full width)
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Local Tanque:*"), gbc);
         txtLocalTanque = new JTextField();
-        gbc.gridx = 1; gbc.gridwidth = 3; formPanel.add(txtLocalTanque, gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
+        formPanel.add(txtLocalTanque, gbc);
         gbc.gridwidth = 1;
 
-        gbc.gridx = 0; gbc.gridy = 3;
+        // Quantidade e Capacidade (linha 3, lado a lado)
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
         formPanel.add(new JLabel("Quantidade (L):*"), gbc);
         txtQuantidade = new JTextField();
-        gbc.gridx = 1; formPanel.add(txtQuantidade, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.3;
+        formPanel.add(txtQuantidade, gbc);
         adicionarCalculoAutomatico();
 
-        gbc.gridx = 2; formPanel.add(new JLabel("Capacidade:"), gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        formPanel.add(new JLabel("Capacidade:"), gbc);
         lblPercentual = new JLabel("0% (0/60.000L)");
-        gbc.gridx = 3; formPanel.add(lblPercentual, gbc);
+        gbc.gridx = 3; gbc.weightx = 0.3;
+        formPanel.add(lblPercentual, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4;
+        // Nível (linha 4, full width)
+        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
         formPanel.add(new JLabel("Nível:"), gbc);
         progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
-        gbc.gridx = 1; gbc.gridwidth = 3; formPanel.add(progressBar, gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
+        formPanel.add(progressBar, gbc);
         gbc.gridwidth = 1;
 
-        gbc.gridx = 0; gbc.gridy = 5;
+        // Lote Endereço e Data Validade (linha 5, lado a lado)
+        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0;
         formPanel.add(new JLabel("Lote Endereço:"), gbc);
         txtLoteEndereco = new JTextField();
-        gbc.gridx = 1; formPanel.add(txtLoteEndereco, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.3;
+        formPanel.add(txtLoteEndereco, gbc);
 
-        gbc.gridx = 2; formPanel.add(new JLabel("Data Validade:"), gbc);
+        gbc.gridx = 2; gbc.weightx = 0;
+        formPanel.add(new JLabel("Data Validade:"), gbc);
         txtDataValidade = new JFormattedTextField();
         dateFormatter.install(txtDataValidade);
-        gbc.gridx = 3; formPanel.add(txtDataValidade, gbc);
+        gbc.gridx = 3; gbc.weightx = 0.3;
+        formPanel.add(txtDataValidade, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 6;
+        // Lote Fabricação (linha 6, full width)
+        gbc.gridx = 0; gbc.gridy = 6; gbc.weightx = 0;
         formPanel.add(new JLabel("Lote Fabricação:"), gbc);
         txtLoteFabricacao = new JTextField();
-        gbc.gridx = 1; gbc.gridwidth = 3; formPanel.add(txtLoteFabricacao, gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
+        formPanel.add(txtLoteFabricacao, gbc);
+        gbc.gridwidth = 1;
 
+        // Botões (linha 7)
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnSalvar = new JButton("💾 Salvar");
         btnExcluir = new JButton("🗑️ Excluir");
@@ -204,14 +226,42 @@ public class TelaEstoquePanel extends JPanel {
 
         gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 4;
         formPanel.add(buttonPanel, gbc);
+        gbc.gridwidth = 1;
+
         add(formPanel, BorderLayout.NORTH);
     }
 
     private void adicionarCalculoAutomatico() {
         txtQuantidade.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { calcularTipoEPercentual(); }
+            private boolean isUpdating = false;
+
+            @Override public void insertUpdate(DocumentEvent e) { formatarCampoQuantidade(); calcularTipoEPercentual(); }
             @Override public void removeUpdate(DocumentEvent e) { calcularTipoEPercentual(); }
-            @Override public void changedUpdate(DocumentEvent e) { calcularTipoEPercentual(); }
+            @Override public void changedUpdate(DocumentEvent e) { formatarCampoQuantidade(); calcularTipoEPercentual(); }
+
+            private void formatarCampoQuantidade() {
+                if (isUpdating) return;
+
+                SwingUtilities.invokeLater(() -> {
+                    isUpdating = true;
+                    try {
+                        String texto = txtQuantidade.getText().replace(".", "").replace(",", ".").replace("L", "").trim();
+                        if (!texto.isEmpty()) {
+                            BigDecimal valor = new BigDecimal(texto);
+                            int caretPos = txtQuantidade.getCaretPosition();
+                            String textoFormatado = formatarQuantidade(valor) + " L";
+                            txtQuantidade.setText(textoFormatado);
+
+                            // Ajusta a posição do cursor
+                            int novaPosicao = Math.min(caretPos, textoFormatado.length());
+                            txtQuantidade.setCaretPosition(novaPosicao);
+                        }
+                    } catch (Exception ignored) {
+                    } finally {
+                        isUpdating = false;
+                    }
+                });
+            }
         });
     }
 
@@ -222,9 +272,10 @@ public class TelaEstoquePanel extends JPanel {
                     lblTipoCalculado.setText("---");
                     lblPercentual.setText("0% (0/60.000L)");
                     progressBar.setValue(0);
+                    progressBar.setForeground(Color.LIGHT_GRAY);
                     return;
                 }
-                BigDecimal quantidade = new BigDecimal(txtQuantidade.getText().replace(",", "."));
+                BigDecimal quantidade = new BigDecimal(txtQuantidade.getText().replace(".", "").replace(",", ".").replace("L", "").trim());
                 BigDecimal percentual = quantidade.multiply(BigDecimal.valueOf(100))
                         .divide(LIMITE_TANQUE, 2, RoundingMode.HALF_UP);
                 TipoEstoque tipo = calcularTipo(quantidade);
@@ -232,8 +283,23 @@ public class TelaEstoquePanel extends JPanel {
                 lblPercentual.setText(String.format("%.1f%% (%.0f/60.000L)",
                         percentual.doubleValue(), quantidade.doubleValue()));
                 progressBar.setValue(percentual.intValue());
+
+                // Define a cor da barra de acordo com o nível
+                if (percentual.compareTo(BigDecimal.valueOf(50)) >= 0) {
+                    progressBar.setForeground(new Color(34, 139, 34)); // Verde
+                } else if (percentual.compareTo(BigDecimal.valueOf(25)) >= 0) {
+                    progressBar.setForeground(new Color(255, 193, 7)); // Amarelo
+                } else if (percentual.compareTo(BigDecimal.ZERO) > 0) {
+                    progressBar.setForeground(new Color(220, 53, 69)); // Vermelho
+                } else {
+                    progressBar.setForeground(Color.LIGHT_GRAY);
+                }
             } catch (Exception ignored) {}
         });
+    }
+
+    private String formatarQuantidade(BigDecimal quantidade) {
+        return String.format("%,.0f", quantidade.doubleValue()).replace(",", ".");
     }
 
     private TipoEstoque calcularTipo(BigDecimal quantidade) {
@@ -255,7 +321,11 @@ public class TelaEstoquePanel extends JPanel {
         table = new JTable(tableModel);
         JTableHeader header = table.getTableHeader();
         header.setFont(new Font("Arial Black", Font.BOLD, 12));
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        header.setForeground(Color.BLACK);
+        header.setPreferredSize(new Dimension(header.getWidth(), 25));
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     private void atualizarTabela() {
@@ -269,7 +339,7 @@ public class TelaEstoquePanel extends JPanel {
                         tableModel.addRow(new Object[]{
                                 r.id(),
                                 r.nomeProduto(),
-                                String.format("%.2f L", r.quantidade()),
+                                formatarQuantidade(r.quantidade()) + " L",
                                 r.localTanque(),
                                 r.loteEndereco(),
                                 r.loteFabricacao(),
@@ -302,7 +372,7 @@ public class TelaEstoquePanel extends JPanel {
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                BigDecimal quantidade = new BigDecimal(txtQuantidade.getText().trim().replace(",", "."));
+                BigDecimal quantidade = new BigDecimal(txtQuantidade.getText().replace(".", "").replace(",", ".").replace("L", "").trim());
                 java.util.Date dataValidade = null;
                 String dataText = txtDataValidade.getText().replace("_", "").trim();
                 if (!dataText.isEmpty()) {

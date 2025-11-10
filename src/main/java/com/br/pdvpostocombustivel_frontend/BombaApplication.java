@@ -169,19 +169,17 @@ public class BombaApplication extends JFrame {
         ));
     }
 
-    /**
-     * ✅ Ponto de entrada do sistema:
-     * Se não houver parâmetros, abre a TelaBomba (lista de bombas)
-     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
                 RestTemplate restTemplate = new RestTemplate();
-                EstoqueService estoqueService = new EstoqueService(restTemplate);
+
+                // ✅ Instancia corretamente os serviços
+                BombaService bombaService = new BombaService(restTemplate);
                 PrecoService precoService = new PrecoService(restTemplate);
 
-                // Abre a tela principal com as bombas
-                new com.br.pdvpostocombustivel_frontend.view.TelaBomba(estoqueService, precoService)
+                // ✅ Abre a tela com as bombas
+                new TelaBomba(bombaService, precoService)
                         .setVisible(true);
 
             } catch (Exception e) {

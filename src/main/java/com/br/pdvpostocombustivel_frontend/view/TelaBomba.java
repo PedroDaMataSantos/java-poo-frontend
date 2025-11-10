@@ -1,10 +1,9 @@
 package com.br.pdvpostocombustivel_frontend.view;
 
 import com.br.pdvpostocombustivel_frontend.BombaApplication;
-import com.br.pdvpostocombustivel_frontend.model.dto.EstoqueResponse;
-import com.br.pdvpostocombustivel_frontend.service.EstoqueService;
+import com.br.pdvpostocombustivel_frontend.model.dto.BombaResponse;
+import com.br.pdvpostocombustivel_frontend.service.BombaService;
 import com.br.pdvpostocombustivel_frontend.service.PrecoService;
-import org.springframework.web.client.RestTemplate;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,12 +12,12 @@ import java.util.List;
 
 public class TelaBomba extends JFrame {
 
-    private final EstoqueService estoqueService;
+    private final BombaService bombaService;
     private final PrecoService precoService;
     private JPanel painelBombas;
 
-    public TelaBomba(EstoqueService estoqueService, PrecoService precoService) {
-        this.estoqueService = estoqueService;
+    public TelaBomba(BombaService bombaService, PrecoService precoService) {
+        this.bombaService = bombaService;
         this.precoService = precoService;
         configurarJanela();
         montarLayout();
@@ -54,17 +53,17 @@ public class TelaBomba extends JFrame {
 
     private void carregarBombas() {
         try {
-            List<EstoqueResponse> estoques = estoqueService.listAll();
+            List<BombaResponse> bombas = bombaService.listarTodas();
             painelBombas.removeAll();
 
-            if (estoques == null || estoques.isEmpty()) {
+            if (bombas == null || bombas.isEmpty()) {
                 JLabel vazio = new JLabel("Nenhuma bomba cadastrada.", SwingConstants.CENTER);
                 vazio.setFont(new Font("Segoe UI", Font.PLAIN, 18));
                 painelBombas.add(vazio);
             } else {
                 int contador = 1;
-                for (EstoqueResponse estoque : estoques) {
-                    painelBombas.add(criarCardBomba(contador++, estoque));
+                for (BombaResponse bomba : bombas) {
+                    painelBombas.add(criarCardBomba(contador++, bomba));
                 }
             }
 
@@ -78,7 +77,7 @@ public class TelaBomba extends JFrame {
         }
     }
 
-    private JPanel criarCardBomba(int numero, EstoqueResponse estoque) {
+    private JPanel criarCardBomba(int numero, BombaResponse bomba) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.GRAY, 1, true),
@@ -92,7 +91,7 @@ public class TelaBomba extends JFrame {
         lblTitulo.setFont(new Font("Segoe UI Black", Font.BOLD, 18));
         lblTitulo.setForeground(new Color(30, 60, 110));
 
-        String tipo = (estoque.nomeProduto() != null ? estoque.nomeProduto() : "DESCONHECIDO").toUpperCase();
+        String tipo = (bomba.nomeProduto() != null ? bomba.nomeProduto() : "DESCONHECIDO").toUpperCase();
         JLabel lblTipo = new JLabel(tipo, SwingConstants.CENTER);
         lblTipo.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblTipo.setForeground(Color.DARK_GRAY);
@@ -120,18 +119,18 @@ public class TelaBomba extends JFrame {
             }
 
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                abrirTelaBomba(numero, estoque);
+                abrirTelaBomba(numero, bomba);
             }
         });
 
         return card;
     }
 
-    private void abrirTelaBomba(int numero, EstoqueResponse estoque) {
+    private void abrirTelaBomba(int numero, BombaResponse bomba) {
         try {
             BigDecimal precoAtual;
             try {
-                precoAtual = precoService.buscarPrecoAtual(estoque.id());
+                precoAtual = precoService.buscarPrecoAtual(bomba.idEstoque());
                 if (precoAtual == null) precoAtual = BigDecimal.ZERO;
             } catch (Exception e) {
                 precoAtual = BigDecimal.ZERO;
@@ -139,9 +138,9 @@ public class TelaBomba extends JFrame {
 
             new BombaApplication(
                     numero,
-                    estoque.nomeProduto(),
+                    bomba.nomeProduto(),
                     precoAtual,
-                    estoque.id()
+                    bomba.idEstoque()
             ).setVisible(true);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
