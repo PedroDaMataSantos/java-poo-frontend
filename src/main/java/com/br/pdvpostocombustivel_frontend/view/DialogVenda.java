@@ -21,7 +21,7 @@ public class DialogVenda extends JDialog {
     private JButton btnConfirmar;
 
     public DialogVenda(JFrame parent, EstoqueResponse estoque) {
-        super(parent, "Venda - " + estoque.produtoNome(), true);
+        super(parent, "Venda - " + estoque.nomeProduto(), true);
         this.estoque = estoque;
         this.vendaService = new VendaService(new org.springframework.web.client.RestTemplate());
         this.precoService = new PrecoService(new org.springframework.web.client.RestTemplate());
@@ -64,7 +64,7 @@ public class DialogVenda extends JDialog {
                 litros = valor.divide(preco, 2, RoundingMode.HALF_UP);
             }
 
-            BigDecimal imposto = calcularImposto(estoque.produtoNome());
+            BigDecimal imposto = calcularImposto(estoque.nomeProduto());
             BigDecimal totalComImposto = valor.add(valor.multiply(imposto)).setScale(2, RoundingMode.HALF_UP);
 
             // envia venda pro backend
@@ -99,7 +99,7 @@ public class DialogVenda extends JDialog {
                 ==============================
                 Obrigado pela preferência!
                 """.formatted(
-                estoque.produtoNome(),
+                estoque.nomeProduto(),
                 valor,
                 imposto.multiply(BigDecimal.valueOf(100)),
                 total

@@ -5,6 +5,8 @@ import java.util.Date;
 
 public record PrecoResponse(
         Long id,
+        Long idProduto,
+        String nomeProduto,
         BigDecimal valor,
         String dataAlteracao,
         Date horaAlteracao

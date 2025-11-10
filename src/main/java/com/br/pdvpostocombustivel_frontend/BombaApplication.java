@@ -3,7 +3,8 @@ package com.br.pdvpostocombustivel_frontend;
 import com.br.pdvpostocombustivel_frontend.model.dto.ItemVendaRequest;
 import com.br.pdvpostocombustivel_frontend.model.dto.VendaRequest;
 import com.br.pdvpostocombustivel_frontend.model.enums.TipoVenda;
-import com.br.pdvpostocombustivel_frontend.service.VendaService;
+import com.br.pdvpostocombustivel_frontend.service.*;
+import com.br.pdvpostocombustivel_frontend.view.TelaBomba;
 import org.springframework.web.client.RestTemplate;
 
 import javax.swing.*;
@@ -39,10 +40,14 @@ public class BombaApplication extends JFrame {
     public BombaApplication(int numeroBomba, String tipoCombustivel, BigDecimal precoLitro, Long idProduto) {
         this.numeroBomba = numeroBomba;
         this.tipoCombustivel = tipoCombustivel;
-        this.precoLitro = precoLitro;
+        this.precoLitro = precoLitro == null ? BigDecimal.ZERO : precoLitro;
         this.idProduto = idProduto;
         this.vendaService = new VendaService(new RestTemplate());
 
+        configurarTela();
+    }
+
+    private void configurarTela() {
         setTitle("Bomba " + numeroBomba + " - " + tipoCombustivel);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(450, 300);
@@ -93,7 +98,9 @@ public class BombaApplication extends JFrame {
                 txtValor.setText(valorBase.setScale(2, RoundingMode.HALF_UP).toString());
             } else {
                 BigDecimal valorInformado = parseBigDecimal(txtValor.getText());
-                litros = valorInformado.divide(precoLitro, 3, RoundingMode.HALF_UP);
+                litros = precoLitro.compareTo(BigDecimal.ZERO) == 0 ?
+                        BigDecimal.ZERO :
+                        valorInformado.divide(precoLitro, 3, RoundingMode.HALF_UP);
                 valorBase = valorInformado;
                 txtLitros.setText(litros.setScale(3, RoundingMode.HALF_UP).toString());
             }
@@ -126,14 +133,7 @@ public class BombaApplication extends JFrame {
 
     private void enviarVendaBackend(BigDecimal litros, BigDecimal valorBase, BigDecimal valorFinal, TipoVenda tipoVenda) {
         ItemVendaRequest item = new ItemVendaRequest(idProduto, litros, precoLitro, valorBase);
-
-        VendaRequest venda = new VendaRequest(
-                LocalDateTime.now(),
-                tipoVenda,
-                valorFinal,
-                List.of(item)
-        );
-
+        VendaRequest venda = new VendaRequest(LocalDateTime.now(), tipoVenda, valorFinal, List.of(item));
         vendaService.registrar(venda);
     }
 
@@ -169,9 +169,27 @@ public class BombaApplication extends JFrame {
         ));
     }
 
+    /**
+     * ✅ Ponto de entrada do sistema:
+     * Se não houver parâmetros, abre a TelaBomba (lista de bombas)
+     */
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() ->
-                new BombaApplication(1, "Gasolina Comum", new BigDecimal("5.89"), 1L)
-                        .setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                EstoqueService estoqueService = new EstoqueService(restTemplate);
+                PrecoService precoService = new PrecoService(restTemplate);
+
+                // Abre a tela principal com as bombas
+                new com.br.pdvpostocombustivel_frontend.view.TelaBomba(estoqueService, precoService)
+                        .setVisible(true);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null,
+                        "Erro ao iniciar o sistema: " + e.getMessage(),
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 }

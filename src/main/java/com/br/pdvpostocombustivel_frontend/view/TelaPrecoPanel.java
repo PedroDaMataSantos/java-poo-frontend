@@ -2,9 +2,13 @@ package com.br.pdvpostocombustivel_frontend.view;
 
 import com.br.pdvpostocombustivel_frontend.model.dto.PrecoRequest;
 import com.br.pdvpostocombustivel_frontend.model.dto.PrecoResponse;
+import com.br.pdvpostocombustivel_frontend.model.dto.ProdutoResponse;
 import com.br.pdvpostocombustivel_frontend.service.PrecoService;
+import com.br.pdvpostocombustivel_frontend.service.ProdutoService;
 
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -21,7 +25,7 @@ public class TelaPrecoPanel extends JPanel {
     private JFormattedTextField txtDataAlteracao;
     private JFormattedTextField txtHoraAlteracao;
     private JTextField txtValor;
-    private JComboBox<String> comboTipo;
+    private JComboBox<ProdutoComboItem> comboProduto;
     private JTextField txtId;
     private JButton btnSalvar;
     private JButton btnExcluir;
@@ -30,22 +34,27 @@ public class TelaPrecoPanel extends JPanel {
     private DefaultTableModel tableModel;
 
     private final PrecoService precoService;
+    private final ProdutoService produtoService;
 
-    // formatadores
     private MaskFormatter dateFormatter;
     private MaskFormatter timeFormatter;
-
-    // ===== ALTERAÇÃO 1: Flag para controlar formatação =====
     private boolean isFormatting = false;
+    private List<ProdutoResponse> produtosDisponiveis;
 
-    public TelaPrecoPanel(PrecoService precoService) {
+    public TelaPrecoPanel(PrecoService precoService, ProdutoService produtoService) {
         this.precoService = precoService;
+        this.produtoService = produtoService;
+        this.produtosDisponiveis = java.util.List.of();
+
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         inicializarFormatadores();
         criarFormulario();
         criarTabela();
+        adicionarListenerDeAbas();
+
+        carregarProdutosAsync();
         atualizarTabela();
     }
 
@@ -63,6 +72,54 @@ public class TelaPrecoPanel extends JPanel {
         }
     }
 
+    private void adicionarListenerDeAbas() {
+        addAncestorListener(new AncestorListener() {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+                if (produtosDisponiveis == null || produtosDisponiveis.isEmpty()) {
+                    carregarProdutosAsync();
+                }
+            }
+
+            @Override public void ancestorRemoved(AncestorEvent event) {}
+            @Override public void ancestorMoved(AncestorEvent event) {}
+        });
+    }
+
+    private void carregarProdutosAsync() {
+        new SwingWorker<List<ProdutoResponse>, Void>() {
+            @Override
+            protected List<ProdutoResponse> doInBackground() throws Exception {
+                return produtoService.listarProdutos();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    produtosDisponiveis = get();
+                    preencherComboProdutos();
+                } catch (Exception e) {
+                    produtosDisponiveis = List.of();
+                    preencherComboProdutos();
+                    System.err.println("Erro ao carregar produtos: " + e.getMessage());
+                }
+            }
+        }.execute();
+    }
+
+    private void preencherComboProdutos() {
+        comboProduto.removeAllItems();
+        comboProduto.addItem(new ProdutoComboItem(null, "-- Selecione um Produto --"));
+        if (produtosDisponiveis == null || produtosDisponiveis.isEmpty()) return;
+
+        for (ProdutoResponse p : produtosDisponiveis) {
+            String nomeExibicao = p.nome() + (p.tipoProduto() != null ? " - " + p.tipoProduto().getDescricao() : "");
+            comboProduto.addItem(new ProdutoComboItem(p.id(), nomeExibicao));
+        }
+
+        comboProduto.setSelectedIndex(0);
+    }
+
     private void criarFormulario() {
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(BorderFactory.createTitledBorder("Cadastro de Preços"));
@@ -70,7 +127,7 @@ public class TelaPrecoPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // ID
+        // Linha 0: ID e Produto (lado a lado)
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(new JLabel("ID:"), gbc);
         txtId = new JTextField(10);
@@ -78,30 +135,22 @@ public class TelaPrecoPanel extends JPanel {
         gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtId, gbc);
 
-        // Tipo (combustível)
         gbc.gridx = 2; gbc.weightx = 0;
-        formPanel.add(new JLabel("Tipo:"), gbc);
-        comboTipo = new JComboBox<>(new String[]{
-                "GASOLINA_COMUM",
-                "GASOLINA_ADITIVADA",
-                "DIESEL_S10",
-                "ETANOL_HIDRATADO"
-        });
+        formPanel.add(new JLabel("Produto:"), gbc);
+        comboProduto = new JComboBox<>();
         gbc.gridx = 3; gbc.weightx = 0.3;
-        formPanel.add(comboTipo, gbc);
+        formPanel.add(comboProduto, gbc);
 
-        // Valor (linha 1 full width like Nome)
+        // Linha 1: Valor (full width)
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
         formPanel.add(new JLabel("Valor:*"), gbc);
         txtValor = new JTextField();
         gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtValor, gbc);
         gbc.gridwidth = 1;
-
-        // ===== ALTERAÇÃO 2: Adicionar formatação monetária ao campo txtValor =====
         adicionarFormatacaoMonetaria(txtValor);
 
-        // Data Alteração (linha 2, lado a lado com Hora)
+        // Linha 2: Data Alteração e Hora Alteração (lado a lado)
         gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Data Alteração:"), gbc);
         txtDataAlteracao = new JFormattedTextField();
@@ -109,7 +158,6 @@ public class TelaPrecoPanel extends JPanel {
         gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtDataAlteracao, gbc);
 
-        // Hora Alteração (ao lado, como CTPS)
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(new JLabel("Hora Alteração:"), gbc);
         txtHoraAlteracao = new JFormattedTextField();
@@ -117,7 +165,7 @@ public class TelaPrecoPanel extends JPanel {
         gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(txtHoraAlteracao, gbc);
 
-        // Botões (linha 4, gridwidth=4)
+        // Linha 3: Botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnSalvar = new JButton("💾 Salvar");
         btnExcluir = new JButton("🗑️ Excluir");
@@ -131,14 +179,13 @@ public class TelaPrecoPanel extends JPanel {
         buttonPanel.add(btnExcluir);
         buttonPanel.add(btnLimpar);
 
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 4;
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 4;
         formPanel.add(buttonPanel, gbc);
         gbc.gridwidth = 1;
 
         add(formPanel, BorderLayout.NORTH);
     }
 
-    // ===== ALTERAÇÃO 3: Método novo para adicionar formatação monetária =====
     private void adicionarFormatacaoMonetaria(JTextField campo) {
         campo.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -236,9 +283,12 @@ public class TelaPrecoPanel extends JPanel {
     }
 
     private void criarTabela() {
-        String[] colunas = {"ID", "Tipo", "Valor", "Data Alteração", "Hora Alteração"};
+        String[] colunas = {"ID", "Produto", "Valor", "Data Alteração", "Hora Alteração"};
         tableModel = new DefaultTableModel(colunas, 0) {
-            @Override public boolean isCellEditable(int row, int column) { return false; }
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         table = new JTable(tableModel);
 
@@ -274,13 +324,15 @@ public class TelaPrecoPanel extends JPanel {
                     for (PrecoResponse p : precos) {
                         String horaStr = "";
                         try {
-                            if (p.horaAlteracao() != null) horaStr = timeFmt.format(p.horaAlteracao());
-                        } catch (Exception ignored) {}
+                            if (p.horaAlteracao() != null) {
+                                horaStr = timeFmt.format(p.horaAlteracao());
+                            }
+                        } catch (Exception ignored) {
+                        }
 
                         tableModel.addRow(new Object[]{
                                 p.id(),
-                                // tenta usar campo de tipo se existir no response, senão usa vazio
-                                (p instanceof PrecoResponse ? getTipoFromResponse(p) : ""),
+                                p.idProduto(),
                                 p.valor(),
                                 p.dataAlteracao(),
                                 horaStr
@@ -298,33 +350,18 @@ public class TelaPrecoPanel extends JPanel {
         }.execute();
     }
 
-    // helper para extrair tipo do PrecoResponse (se tiver método/field)
-    private Object getTipoFromResponse(PrecoResponse p) {
-        try {
-            // se o record PrecoResponse tiver um método tipo/combustivel, adaptamos:
-            // tentamos acessar via reflexão nomes comuns; caso não exista, retornamos vazio
-            try {
-                return PrecoResponse.class.getMethod("tipoProduto").invoke(p);
-            } catch (NoSuchMethodException ignored) {}
-            try {
-                return PrecoResponse.class.getMethod("tipoCombustivel").invoke(p);
-            } catch (NoSuchMethodException ignored) {}
-            try {
-                return PrecoResponse.class.getMethod("tipo").invoke(p);
-            } catch (NoSuchMethodException ignored) {}
-        } catch (Exception ex) {
-            // fallback para string vazia
-        }
-        return "";
-    }
-
     private void salvar() {
+        ProdutoComboItem itemSelecionado = (ProdutoComboItem) comboProduto.getSelectedItem();
+        if (itemSelecionado == null || itemSelecionado.getId() == null) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto!", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         if (txtValor.getText().isBlank() || txtDataAlteracao.getText().contains("_")) {
             JOptionPane.showMessageDialog(this, "Valor e Data Alteração são obrigatórios.", "Erro", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // ===== ALTERAÇÃO 4: Ajuste na extração do valor =====
         BigDecimal valor;
         try {
             String v = txtValor.getText().trim();
@@ -354,10 +391,11 @@ public class TelaPrecoPanel extends JPanel {
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
                 hora = sdf.parse(horaText);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         PrecoRequest request = new PrecoRequest(
-
+                itemSelecionado.getId(),
                 valor,
                 dataAlteracao,
                 hora
@@ -426,10 +464,18 @@ public class TelaPrecoPanel extends JPanel {
         int row = table.getSelectedRow();
         if (row >= 0) {
             txtId.setText(tableModel.getValueAt(row, 0).toString());
-            Object tipoObj = tableModel.getValueAt(row, 1);
-            comboTipo.setSelectedItem(tipoObj != null ? tipoObj.toString() : comboTipo.getItemAt(0));
 
-            // ===== ALTERAÇÃO 5: Desabilita formatação temporariamente ao preencher =====
+            // Busca o produto pelo ID
+            Long idProduto = (Long) tableModel.getValueAt(row, 1);
+            for (int i = 0; i < comboProduto.getItemCount(); i++) {
+                ProdutoComboItem prod = comboProduto.getItemAt(i);
+                if (prod.getId() != null && prod.getId().equals(idProduto)) {
+                    comboProduto.setSelectedIndex(i);
+                    break;
+                }
+            }
+
+            // Desabilita formatação temporariamente ao preencher
             isFormatting = true;
             txtValor.setText(tableModel.getValueAt(row, 2).toString());
             isFormatting = false;
@@ -444,7 +490,26 @@ public class TelaPrecoPanel extends JPanel {
         txtValor.setText("");
         txtDataAlteracao.setText("");
         txtHoraAlteracao.setText("");
-        comboTipo.setSelectedIndex(0);
+        comboProduto.setSelectedIndex(0);
         table.clearSelection();
+    }
+
+    private static class ProdutoComboItem {
+        private final Long id;
+        private final String nome;
+
+        public ProdutoComboItem(Long id, String nome) {
+            this.id = id;
+            this.nome = nome;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return nome;
+        }
     }
 }

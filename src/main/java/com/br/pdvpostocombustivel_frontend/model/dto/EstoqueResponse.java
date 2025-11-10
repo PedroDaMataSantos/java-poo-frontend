@@ -13,5 +13,6 @@ public record EstoqueResponse(
         Date dataValidade,
         TipoEstoque tipo,
         Long idProduto,
-        String produtoNome
+        String nomeProduto,
+        Integer numeroBomba
 ) {}

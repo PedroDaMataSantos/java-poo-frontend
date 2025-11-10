@@ -4,11 +4,11 @@ import com.br.pdvpostocombustivel_frontend.model.dto.PrecoRequest;
 import com.br.pdvpostocombustivel_frontend.model.dto.PrecoResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class PrecoService {
@@ -20,17 +20,21 @@ public class PrecoService {
         this.restTemplate = restTemplate;
     }
 
-    // 🔹 Listar todos os preços
+    // 🔹 Lista todos os preços
     public List<PrecoResponse> listAll() {
         try {
-            PrecoResponse[] response = restTemplate.getForObject(BASE_URL, PrecoResponse[].class);
-            return Arrays.asList(response != null ? response : new PrecoResponse[0]);
+            ResponseEntity<PrecoResponse[]> response =
+                    restTemplate.getForEntity(BASE_URL, PrecoResponse[].class);
+
+            PrecoResponse[] precos = response.getBody();
+            return precos != null ? Arrays.asList(precos) : List.of();
+
         } catch (Exception e) {
             throw new RuntimeException("Erro ao listar preços: " + e.getMessage());
         }
     }
 
-    // 🔹 Criar novo preço
+    // 🔹 Cria novo preço
     public void create(PrecoRequest request) {
         try {
             restTemplate.postForObject(BASE_URL, request, Void.class);
@@ -39,7 +43,7 @@ public class PrecoService {
         }
     }
 
-    // 🔹 Atualizar preço existente
+    // 🔹 Atualiza preço existente
     public void update(Long id, PrecoRequest request) {
         try {
             restTemplate.put(BASE_URL + "/" + id, request);
@@ -48,7 +52,7 @@ public class PrecoService {
         }
     }
 
-    // 🔹 Excluir preço
+    // 🔹 Exclui preço
     public void delete(Long id) {
         try {
             restTemplate.delete(BASE_URL + "/" + id);
@@ -57,19 +61,22 @@ public class PrecoService {
         }
     }
 
-    // 🔹 Buscar o preço mais recente de um produto específico
+    // 🔹 Busca o preço mais recente de um produto
     public BigDecimal buscarPrecoAtual(Long idProduto) {
         try {
             String url = BASE_URL + "/atual/" + idProduto;
-            Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+            ResponseEntity<PrecoResponse> response =
+                    restTemplate.getForEntity(url, PrecoResponse.class);
 
-            if (response != null && response.get("valor") != null) {
-                return new BigDecimal(response.get("valor").toString());
+            PrecoResponse preco = response.getBody();
+            if (preco == null || preco.valor() == null) {
+                return BigDecimal.ZERO; // se não houver preço, retorna 0
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Erro ao buscar preço do produto ID " + idProduto + ": " + e.getMessage());
-        }
+            return preco.valor();
 
-        throw new RuntimeException("Preço não encontrado para o produto ID " + idProduto);
+        } catch (Exception e) {
+            System.err.println("⚠ Erro ao buscar preço atual: " + e.getMessage());
+            return BigDecimal.ZERO; // evita crash da tela de bomba
+        }
     }
 }

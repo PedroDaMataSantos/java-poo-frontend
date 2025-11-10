@@ -56,10 +56,15 @@ public class TelaPrincipal extends JFrame {
 
         tabbedPane.addTab("Pessoas", new TelaPessoaPanel(pessoaService));
         tabbedPane.addTab("Produtos", new TelaProdutoPanel(produtoService));
-        tabbedPane.addTab("Preços", new TelaPrecoPanel(precoService));
+
+        // ✅ Corrigido: passa os dois serviços para o construtor
+        tabbedPane.addTab("Preços", new TelaPrecoPanel(precoService, produtoService));
+
         tabbedPane.addTab("Estoque", new TelaEstoquePanel(estoqueService));
+
         custoPanel = new TelaCustoPanel(custoService);
         acessoPanel = new TelaAcessoPanel(acessoService);
+
         tabbedPane.addTab("Custos", custoPanel);
         tabbedPane.addTab("Acessos", acessoPanel);
         tabbedPane.addTab("Contatos", new TelaContatoPanel(contatoService));
