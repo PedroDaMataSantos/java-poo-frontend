@@ -12,7 +12,6 @@ public record EstoqueResponse(
         String loteFabricacao,
         Date dataValidade,
         TipoEstoque tipo,
-        Long idProduto
-
-
+        Long idProduto,
+        String produtoNome
 ) {}
