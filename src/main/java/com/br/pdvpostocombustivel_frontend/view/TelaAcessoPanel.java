@@ -240,4 +240,9 @@ public class TelaAcessoPanel extends JPanel {
         comboPerfil.setSelectedIndex(0);
         table.clearSelection();
     }
+    public void desabilitarExclusao() {
+        if (btnExcluir != null) {
+            btnExcluir.setEnabled(false);
+        }
+    }
 }

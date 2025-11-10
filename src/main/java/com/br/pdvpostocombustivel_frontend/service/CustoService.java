@@ -4,7 +4,6 @@ import com.br.pdvpostocombustivel_frontend.model.dto.CustoRequest;
 import com.br.pdvpostocombustivel_frontend.model.dto.CustoResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.Arrays;
 import java.util.List;
 

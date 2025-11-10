@@ -27,6 +27,20 @@ public class AcessoService {
         return restTemplate.postForObject(BASE_URL + "/registrar", request, AcessoResponse.class);
     }
 
+    /**
+     * Autentica o usuário no backend enviando credenciais via POST (JSON).
+     * Retorna o AcessoResponse se válido ou null em caso de falha.
+     */
+    public AcessoResponse login(String usuario, String senha) {
+        try {
+            AcessoRequest req = new AcessoRequest(usuario, senha, null);
+            return restTemplate.postForObject(BASE_URL + "/login", req, AcessoResponse.class);
+        } catch (Exception e) {
+            System.err.println("Falha ao autenticar: " + e.getMessage());
+            return null;
+        }
+    }
+
     public void delete(Long id) {
         restTemplate.delete(BASE_URL + "/" + id);
     }

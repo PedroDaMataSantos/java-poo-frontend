@@ -1,5 +1,6 @@
 package com.br.pdvpostocombustivel_frontend.view;
 
+import com.br.pdvpostocombustivel_frontend.model.enums.TipoAcesso;
 import com.br.pdvpostocombustivel_frontend.service.*;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,10 @@ public class TelaPrincipal extends JFrame {
     private final CustoService custoService;
     private final AcessoService acessoService;
     private final ContatoService contatoService;
+
+    private JTabbedPane tabbedPane;
+    private TelaAcessoPanel acessoPanel;
+    private TelaCustoPanel custoPanel;
 
     public TelaPrincipal(
             PessoaService pessoaService,
@@ -46,25 +51,47 @@ public class TelaPrincipal extends JFrame {
     }
 
     private void criarAbas() {
-        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Arial", Font.BOLD, 12));
 
-        TelaPessoaPanel pessoaPanel = new TelaPessoaPanel(pessoaService);
-        TelaProdutoPanel produtoPanel = new TelaProdutoPanel(produtoService);
-        TelaPrecoPanel precoPanel = new TelaPrecoPanel(precoService);
-        TelaEstoquePanel estoquePanel = new TelaEstoquePanel(estoqueService);
-        TelaCustoPanel custoPanel = new TelaCustoPanel(custoService);
-        TelaAcessoPanel acessoPanel = new TelaAcessoPanel(acessoService);
-        TelaContatoPanel contatoPanel = new TelaContatoPanel(contatoService);
-
-        tabbedPane.addTab("Pessoas", pessoaPanel);
-        tabbedPane.addTab("Produtos", produtoPanel);
-        tabbedPane.addTab("Preços", precoPanel);
-        tabbedPane.addTab("Estoque", estoquePanel);
+        tabbedPane.addTab("Pessoas", new TelaPessoaPanel(pessoaService));
+        tabbedPane.addTab("Produtos", new TelaProdutoPanel(produtoService));
+        tabbedPane.addTab("Preços", new TelaPrecoPanel(precoService));
+        tabbedPane.addTab("Estoque", new TelaEstoquePanel(estoqueService));
+        custoPanel = new TelaCustoPanel(custoService);
+        acessoPanel = new TelaAcessoPanel(acessoService);
         tabbedPane.addTab("Custos", custoPanel);
         tabbedPane.addTab("Acessos", acessoPanel);
-        tabbedPane.addTab("Contatos", contatoPanel);
+        tabbedPane.addTab("Contatos", new TelaContatoPanel(contatoService));
 
         add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    /**
+     * Define as permissões visuais e funcionais com base no perfil do usuário logado.
+     */
+    public void definirPermissao(String perfilUsuario) {
+        if (perfilUsuario == null) return;
+
+        TipoAcesso tipo;
+        try {
+            tipo = TipoAcesso.valueOf(perfilUsuario.toUpperCase());
+        } catch (Exception e) {
+            tipo = TipoAcesso.OPERADOR_CAIXA;
+        }
+
+        if (tipo == TipoAcesso.OPERADOR_CAIXA) {
+            removerAba("Custos");
+            removerAba("Acessos");
+        }
+    }
+
+    private void removerAba(String nomeAba) {
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            if (tabbedPane.getTitleAt(i).equalsIgnoreCase(nomeAba)) {
+                tabbedPane.remove(i);
+                break;
+            }
+        }
     }
 }
