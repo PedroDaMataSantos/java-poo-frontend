@@ -4,21 +4,32 @@ import com.br.pdvpostocombustivel_frontend.BombaApplication;
 import com.br.pdvpostocombustivel_frontend.model.dto.BombaResponse;
 import com.br.pdvpostocombustivel_frontend.service.BombaService;
 import com.br.pdvpostocombustivel_frontend.service.PrecoService;
+import org.springframework.context.ApplicationContext;
 
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Painel principal que exibe todas as bombas cadastradas no sistema.
+ * Permite abrir individualmente a tela operacional de cada bomba.
+ */
 public class TelaBomba extends JFrame {
 
     private final BombaService bombaService;
     private final PrecoService precoService;
+    private final ApplicationContext context; // Reaproveita o contexto Spring
     private JPanel painelBombas;
 
-    public TelaBomba(BombaService bombaService, PrecoService precoService) {
+    /**
+     * Construtor principal.
+     */
+    public TelaBomba(BombaService bombaService, PrecoService precoService, ApplicationContext context) {
         this.bombaService = bombaService;
         this.precoService = precoService;
+        this.context = context;
+
         configurarJanela();
         montarLayout();
         carregarBombas();
@@ -51,6 +62,9 @@ public class TelaBomba extends JFrame {
         add(scroll, BorderLayout.CENTER);
     }
 
+    /**
+     * Carrega as bombas do backend e exibe visualmente.
+     */
     private void carregarBombas() {
         try {
             List<BombaResponse> bombas = bombaService.listarTodas();
@@ -77,6 +91,9 @@ public class TelaBomba extends JFrame {
         }
     }
 
+    /**
+     * Cria visualmente um “card” para representar cada bomba na tela.
+     */
     private JPanel criarCardBomba(int numero, BombaResponse bomba) {
         JPanel card = new JPanel(new BorderLayout());
         card.setBorder(BorderFactory.createCompoundBorder(
@@ -126,6 +143,9 @@ public class TelaBomba extends JFrame {
         return card;
     }
 
+    /**
+     * Abre a interface de operação da bomba selecionada.
+     */
     private void abrirTelaBomba(int numero, BombaResponse bomba) {
         try {
             BigDecimal precoAtual;
@@ -136,12 +156,13 @@ public class TelaBomba extends JFrame {
                 precoAtual = BigDecimal.ZERO;
             }
 
-            new BombaApplication(
+            new TelaOperacaoBomba(
                     numero,
                     bomba.nomeProduto(),
                     precoAtual,
                     bomba.idEstoque()
             ).setVisible(true);
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
                     "Erro ao abrir bomba: " + e.getMessage(),
@@ -149,6 +170,9 @@ public class TelaBomba extends JFrame {
         }
     }
 
+    /**
+     * Define a cor indicadora conforme o tipo do combustível.
+     */
     private Color definirCorPorProduto(String nomeProduto) {
         nomeProduto = nomeProduto.toUpperCase();
         if (nomeProduto.contains("GASOLINA COMUM")) return new Color(210, 40, 40);
