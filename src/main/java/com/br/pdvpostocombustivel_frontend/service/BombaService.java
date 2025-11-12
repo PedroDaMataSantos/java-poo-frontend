@@ -1,7 +1,7 @@
 package com.br.pdvpostocombustivel_frontend.service;
 
-import com.br.pdvpostocombustivel_frontend.model.dto.BombaRequest;
 import com.br.pdvpostocombustivel_frontend.model.dto.BombaResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -13,13 +13,18 @@ import java.util.List;
 @Service
 public class BombaService {
 
+    @Value("${api.backend.url:http://localhost:8080/api/v1/bombas}")
+    private String API_BASE_URL;
+
     private final RestTemplate restTemplate;
-    private final String API_BASE_URL = "http://localhost:8080/api/v1/bombas";
 
     public BombaService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
+    /**
+     * Lista todas as bombas existentes no sistema.
+     */
     public List<BombaResponse> listarTodas() {
         try {
             BombaResponse[] bombas = restTemplate.getForObject(API_BASE_URL, BombaResponse[].class);
@@ -30,6 +35,9 @@ public class BombaService {
         }
     }
 
+    /**
+     * Busca uma bomba específica pelo ID.
+     */
     public BombaResponse buscarPorId(Long id) {
         try {
             return restTemplate.getForObject(API_BASE_URL + "/" + id, BombaResponse.class);
@@ -39,28 +47,5 @@ public class BombaService {
         }
     }
 
-    public BombaResponse criar(BombaRequest request) {
-        try {
-            return restTemplate.postForObject(API_BASE_URL, request, BombaResponse.class);
-        } catch (RestClientException e) {
-            System.err.println("Erro ao criar bomba: " + e.getMessage());
-            return null;
-        }
-    }
-
-    public void atualizar(Long id, BombaRequest request) {
-        try {
-            restTemplate.put(API_BASE_URL + "/" + id, request);
-        } catch (RestClientException e) {
-            System.err.println("Erro ao atualizar bomba: " + e.getMessage());
-        }
-    }
-
-    public void excluir(Long id) {
-        try {
-            restTemplate.delete(API_BASE_URL + "/" + id);
-        } catch (RestClientException e) {
-            System.err.println("Erro ao excluir bomba: " + e.getMessage());
-        }
-    }
+    // Removidos os métodos criar/atualizar/excluir pois o backend não suporta essas operações.
 }
