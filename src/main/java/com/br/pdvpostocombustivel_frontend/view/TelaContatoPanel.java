@@ -14,15 +14,14 @@ import java.util.List;
 
 public class TelaContatoPanel extends JPanel {
 
-    // === TEMA ===
     private static final Color BG_DARK = new Color(20, 20, 20);
     private static final Color FIELD_BG = new Color(40, 40, 40);
     private static final Color FIELD_FG = Color.WHITE;
-    private static final Color ACCENT   = new Color(0, 255, 200);
+    private static final Color ACCENT = new Color(0, 255, 200);
 
-    private static final Color BTN_PRIMARY   = new Color(0, 180, 120);  // Salvar
-    private static final Color BTN_DANGER    = new Color(204, 68, 68);  // Excluir
-    private static final Color BTN_SECONDARY = new Color(60, 63, 65);   // Limpar
+    private static final Color BTN_PRIMARY = new Color(0, 180, 120);
+    private static final Color BTN_DANGER = new Color(204, 68, 68);
+    private static final Color BTN_SECONDARY = new Color(60, 63, 65);
 
     private JFormattedTextField txtTelefone;
     private JTextField txtEmail;
@@ -72,7 +71,7 @@ public class TelaContatoPanel extends JPanel {
             phoneFormatter.setPlaceholderCharacter('_');
             phoneFormatter.setValueContainsLiteralCharacters(false);
         } catch (ParseException e) {
-            System.err.println("Erro no formatter do telefone");
+            System.err.println("Erro ao criar formatadores: " + e.getMessage());
         }
     }
 
@@ -91,52 +90,49 @@ public class TelaContatoPanel extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(criarLabel("ID:"), gbc);
         txtId = estilizarCampo(new JTextField(10));
         txtId.setEditable(false);
-        gbc.gridx = 1;
+        gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtId, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
         formPanel.add(criarLabel("Telefone:*"), gbc);
         txtTelefone = new JFormattedTextField();
         phoneFormatter.install(txtTelefone);
         estilizarCampo(txtTelefone);
-        gbc.gridx = 1;
+        gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtTelefone, gbc);
 
-        gbc.gridx = 2;
+        gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(criarLabel("Email:*"), gbc);
         txtEmail = estilizarCampo(new JTextField());
-        gbc.gridx = 3;
+        gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(txtEmail, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
         formPanel.add(criarLabel("Endereço:*"), gbc);
         txtEndereco = estilizarCampo(new JTextField());
-        gbc.gridx = 1; gbc.gridwidth = 3;
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtEndereco, gbc);
         gbc.gridwidth = 1;
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(BG_DARK);
 
-        btnSalvar = new JButton("💾 Salvar");
-        btnExcluir = new JButton("🗑️ Excluir");
-        btnLimpar = new JButton("🔄 Limpar");
+        btnSalvar = new JButton("Salvar");
+        btnExcluir = new JButton("Excluir");
+        btnLimpar = new JButton("Limpar");
 
         btnSalvar.setBackground(BTN_PRIMARY);
         btnSalvar.setForeground(Color.WHITE);
-        btnSalvar.setFocusPainted(false);
 
         btnExcluir.setBackground(BTN_DANGER);
         btnExcluir.setForeground(Color.WHITE);
-        btnExcluir.setFocusPainted(false);
 
         btnLimpar.setBackground(BTN_SECONDARY);
         btnLimpar.setForeground(Color.WHITE);
-        btnLimpar.setFocusPainted(false);
 
         btnSalvar.addActionListener(e -> salvar());
         btnExcluir.addActionListener(e -> excluir());
@@ -148,6 +144,7 @@ public class TelaContatoPanel extends JPanel {
 
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 4;
         formPanel.add(buttonPanel, gbc);
+        gbc.gridwidth = 1;
 
         add(formPanel, BorderLayout.NORTH);
     }
@@ -166,18 +163,19 @@ public class TelaContatoPanel extends JPanel {
         table.setGridColor(new Color(70,70,70));
 
         JTableHeader header = table.getTableHeader();
+        header.setFont(new Font("Arial Black", Font.BOLD, 12));
         header.setForeground(ACCENT);
         header.setBackground(new Color(15,15,15));
-        header.setFont(new Font("Arial Black", Font.BOLD, 12));
+        header.setPreferredSize(new Dimension(header.getWidth(), 25));
 
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) preencher();
+            if (!e.getValueIsAdjusting()) preencherFormulario();
         });
 
-        JScrollPane scroll = new JScrollPane(table);
-        scroll.getViewport().setBackground(BG_DARK);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(BG_DARK);
 
-        add(scroll, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     private void atualizarTabela() {
@@ -186,20 +184,25 @@ public class TelaContatoPanel extends JPanel {
             protected List<ContatoResponse> doInBackground() throws Exception {
                 return contatoService.listAll();
             }
+
             @Override
             protected void done() {
                 try {
                     List<ContatoResponse> list = get();
                     tableModel.setRowCount(0);
+
                     for (ContatoResponse r : list) {
                         tableModel.addRow(new Object[]{
-                                r.id(), r.telefone(), r.email(), r.endereco()
+                                r.id(),
+                                r.telefone(),
+                                r.email(),
+                                r.endereco()
                         });
                     }
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(
                             TelaContatoPanel.this,
-                            "Erro ao carregar contatos",
+                            "Erro ao buscar contatos: " + e.getMessage(),
                             "Erro",
                             JOptionPane.ERROR_MESSAGE
                     );
@@ -209,10 +212,10 @@ public class TelaContatoPanel extends JPanel {
     }
 
     private void salvar() {
-        if (txtTelefone.getText().replace("_","").trim().isEmpty() ||
+        if (txtTelefone.getText().replace("_", "").trim().isEmpty() ||
                 txtEmail.getText().isBlank() ||
                 txtEndereco.getText().isBlank()) {
-            JOptionPane.showMessageDialog(this, "Preencha todos os campos obrigatórios.");
+            JOptionPane.showMessageDialog(this, "Todos os campos são obrigatórios.", "Erro", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -226,50 +229,69 @@ public class TelaContatoPanel extends JPanel {
                         txtEmail.getText().trim(),
                         txtEndereco.getText().trim()
                 );
-                if (id == null) contatoService.create(req);
-                else contatoService.update(id, req);
+
+                if (id == null) {
+                    contatoService.create(req);
+                } else {
+                    contatoService.update(id, req);
+                }
                 return null;
             }
+
             @Override
             protected void done() {
-                JOptionPane.showMessageDialog(TelaContatoPanel.this,"Contato salvo!");
-                atualizarTabela();
-                limpar();
+                try {
+                    get();
+                    JOptionPane.showMessageDialog(TelaContatoPanel.this, "Contato salvo com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                    limpar();
+                    atualizarTabela();
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(TelaContatoPanel.this, "Erro ao salvar: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }.execute();
     }
 
     private void excluir() {
         if (table.getSelectedRow() < 0) {
-            JOptionPane.showMessageDialog(this,"Selecione um contato.");
+            JOptionPane.showMessageDialog(this, "Selecione um contato para excluir.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Long id = (Long) tableModel.getValueAt(table.getSelectedRow(), 0);
-        if (JOptionPane.showConfirmDialog(this,"Excluir?","Confirme",JOptionPane.YES_NO_OPTION)
-                == JOptionPane.YES_OPTION) {
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            Long id = (Long) tableModel.getValueAt(table.getSelectedRow(), 0);
 
-            new SwingWorker<Void,Void>() {
-                @Override protected Void doInBackground() throws Exception {
+            new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
                     contatoService.delete(id);
                     return null;
                 }
-                @Override protected void done() {
-                    atualizarTabela();
-                    limpar();
+
+                @Override
+                protected void done() {
+                    try {
+                        get();
+                        JOptionPane.showMessageDialog(TelaContatoPanel.this, "Contato excluído!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                        limpar();
+                        atualizarTabela();
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(TelaContatoPanel.this, "Erro ao excluir: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }.execute();
         }
     }
 
-    private void preencher() {
+    private void preencherFormulario() {
         int row = table.getSelectedRow();
-        if (row < 0) return;
-
-        txtId.setText(tableModel.getValueAt(row,0).toString());
-        txtTelefone.setText((String) tableModel.getValueAt(row,1));
-        txtEmail.setText((String) tableModel.getValueAt(row,2));
-        txtEndereco.setText((String) tableModel.getValueAt(row,3));
+        if (row >= 0) {
+            txtId.setText(tableModel.getValueAt(row, 0).toString());
+            txtTelefone.setText(tableModel.getValueAt(row, 1) != null ? tableModel.getValueAt(row, 1).toString() : "");
+            txtEmail.setText(tableModel.getValueAt(row, 2) != null ? tableModel.getValueAt(row, 2).toString() : "");
+            txtEndereco.setText(tableModel.getValueAt(row, 3) != null ? tableModel.getValueAt(row, 3).toString() : "");
+        }
     }
 
     private void limpar() {
