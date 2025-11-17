@@ -22,6 +22,17 @@ import java.util.Date;
 import java.util.List;
 
 public class TelaPrecoPanel extends JPanel {
+
+    // 🎨 Cores do Tema Dark
+    private static final Color BG_DARK = new Color(20, 20, 20);
+    private static final Color PANEL_BG = new Color(20, 20, 20);
+    private static final Color FIELD_BG = new Color(40, 40, 40);
+    private static final Color FIELD_FG = Color.WHITE;
+    private static final Color ACCENT = new Color(0, 255, 200);
+    private static final Color BTN_PRIMARY = new Color(0, 180, 120);
+    private static final Color BTN_DANGER = new Color(204, 68, 68);
+    private static final Color BTN_SECONDARY = new Color(60, 63, 65);
+
     private JFormattedTextField txtDataAlteracao;
     private JFormattedTextField txtHoraAlteracao;
     private JTextField txtValor;
@@ -48,6 +59,7 @@ public class TelaPrecoPanel extends JPanel {
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        setBackground(BG_DARK);
 
         inicializarFormatadores();
         criarFormulario();
@@ -120,31 +132,101 @@ public class TelaPrecoPanel extends JPanel {
         comboProduto.setSelectedIndex(0);
     }
 
+    // 🎨 Métodos auxiliares para criar componentes estilizados
+    private JLabel criarLabel(String texto) {
+        JLabel label = new JLabel(texto);
+        label.setFont(new Font("Arial", Font.BOLD, 12));
+        label.setForeground(ACCENT);
+        return label;
+    }
+
+    private JTextField criarCampoTexto() {
+        JTextField campo = new JTextField();
+        campo.setFont(new Font("Arial", Font.PLAIN, 13));
+        campo.setBackground(FIELD_BG);
+        campo.setForeground(FIELD_FG);
+        campo.setCaretColor(ACCENT);
+        campo.setBorder(BorderFactory.createLineBorder(ACCENT));
+        return campo;
+    }
+
+    private JFormattedTextField criarCampoFormatado() {
+        JFormattedTextField campo = new JFormattedTextField();
+        campo.setFont(new Font("Arial", Font.PLAIN, 13));
+        campo.setBackground(FIELD_BG);
+        campo.setForeground(FIELD_FG);
+        campo.setCaretColor(ACCENT);
+        campo.setBorder(BorderFactory.createLineBorder(ACCENT));
+        return campo;
+    }
+
+    private JButton criarBotaoPrimario(String texto) {
+        JButton botao = new JButton(texto);
+        botao.setBackground(BTN_PRIMARY);
+        botao.setForeground(Color.WHITE);
+        botao.setFocusPainted(false);
+        botao.setFont(new Font("Arial", Font.BOLD, 12));
+        botao.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
+        return botao;
+    }
+
+    private JButton criarBotaoSecundario(String texto) {
+        JButton botao = new JButton(texto);
+        botao.setBackground(BTN_DANGER);
+        botao.setForeground(Color.WHITE);
+        botao.setFocusPainted(false);
+        botao.setFont(new Font("Arial", Font.BOLD, 12));
+        botao.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
+        return botao;
+    }
+
+    private JButton criarBotaoTerciario(String texto) {
+        JButton botao = new JButton(texto);
+        botao.setBackground(BTN_SECONDARY);
+        botao.setForeground(Color.WHITE);
+        botao.setFocusPainted(false);
+        botao.setFont(new Font("Arial", Font.BOLD, 12));
+        botao.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
+        return botao;
+    }
+
     private void criarFormulario() {
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createTitledBorder("Cadastro de Preços"));
+        formPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(ACCENT, 1),
+                "Cadastro de Preços",
+                0, 0,
+                new Font("Arial", Font.BOLD, 12),
+                ACCENT
+        ));
+        formPanel.setBackground(PANEL_BG);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Linha 0: ID e Produto (lado a lado)
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        formPanel.add(new JLabel("ID:"), gbc);
-        txtId = new JTextField(10);
+        formPanel.add(criarLabel("ID:"), gbc);
+        txtId = criarCampoTexto();
         txtId.setEditable(false);
         gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtId, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0;
-        formPanel.add(new JLabel("Produto:"), gbc);
+        formPanel.add(criarLabel("Produto:"), gbc);
         comboProduto = new JComboBox<>();
+        comboProduto.setBackground(FIELD_BG);
+        comboProduto.setForeground(FIELD_FG);
+        comboProduto.setFont(new Font("Arial", Font.PLAIN, 12));
+        comboProduto.setBorder(BorderFactory.createLineBorder(ACCENT));
         gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(comboProduto, gbc);
 
         // Linha 1: Valor (full width)
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        formPanel.add(new JLabel("Valor:*"), gbc);
-        txtValor = new JTextField();
+        formPanel.add(criarLabel("Valor:*"), gbc);
+        txtValor = criarCampoTexto();
         gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0;
         formPanel.add(txtValor, gbc);
         gbc.gridwidth = 1;
@@ -152,24 +234,26 @@ public class TelaPrecoPanel extends JPanel {
 
         // Linha 2: Data Alteração e Hora Alteração (lado a lado)
         gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
-        formPanel.add(new JLabel("Data Alteração:"), gbc);
-        txtDataAlteracao = new JFormattedTextField();
+        formPanel.add(criarLabel("Data Alteração:"), gbc);
+        txtDataAlteracao = criarCampoFormatado();
         dateFormatter.install(txtDataAlteracao);
         gbc.gridx = 1; gbc.weightx = 0.3;
         formPanel.add(txtDataAlteracao, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0;
-        formPanel.add(new JLabel("Hora Alteração:"), gbc);
-        txtHoraAlteracao = new JFormattedTextField();
+        formPanel.add(criarLabel("Hora Alteração:"), gbc);
+        txtHoraAlteracao = criarCampoFormatado();
         timeFormatter.install(txtHoraAlteracao);
         gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(txtHoraAlteracao, gbc);
 
         // Linha 3: Botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        btnSalvar = new JButton("💾 Salvar");
-        btnExcluir = new JButton("🗑️ Excluir");
-        btnLimpar = new JButton("🔄 Limpar");
+        buttonPanel.setBackground(PANEL_BG);
+
+        btnSalvar = criarBotaoPrimario("💾 Salvar");
+        btnExcluir = criarBotaoSecundario("🗑️ Excluir");
+        btnLimpar = criarBotaoTerciario("🔄 Limpar");
 
         btnSalvar.addActionListener(e -> salvar());
         btnExcluir.addActionListener(e -> excluir());
@@ -290,11 +374,18 @@ public class TelaPrecoPanel extends JPanel {
                 return false;
             }
         };
+
         table = new JTable(tableModel);
+        table.setBackground(new Color(30, 30, 30));
+        table.setForeground(Color.WHITE);
+        table.setGridColor(new Color(70, 70, 70));
+        table.setSelectionBackground(new Color(0, 120, 90));
+        table.setSelectionForeground(Color.WHITE);
 
         JTableHeader header = table.getTableHeader();
         header.setFont(new Font("Arial Black", Font.BOLD, 12));
-        header.setForeground(Color.BLACK);
+        header.setForeground(ACCENT);
+        header.setBackground(new Color(15, 15, 15));
         header.setPreferredSize(new Dimension(header.getWidth(), 25));
 
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -304,6 +395,7 @@ public class TelaPrecoPanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(BG_DARK);
         add(scrollPane, BorderLayout.CENTER);
     }
 
