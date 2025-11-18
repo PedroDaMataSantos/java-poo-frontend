@@ -150,7 +150,8 @@ public class TelaBomba extends JFrame {
         try {
             BigDecimal precoAtual;
             try {
-                precoAtual = precoService.buscarPrecoAtual(bomba.idEstoque());
+                // ✅ CORRIGIDO: Agora usa bomba.idProduto() ao invés de bomba.idEstoque()
+                precoAtual = precoService.buscarPrecoAtual(bomba.idProduto());
                 if (precoAtual == null) precoAtual = BigDecimal.ZERO;
             } catch (Exception e) {
                 precoAtual = BigDecimal.ZERO;
@@ -160,7 +161,7 @@ public class TelaBomba extends JFrame {
                     numero,
                     bomba.nomeProduto(),
                     precoAtual,
-                    bomba.idEstoque()
+                    bomba.idProduto()  // ✅ CORRIGIDO: Passa o idProduto para a tela de operação
             ).setVisible(true);
 
         } catch (Exception e) {
@@ -169,7 +170,6 @@ public class TelaBomba extends JFrame {
                     "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
-
     /**
      * Define a cor indicadora conforme o tipo do combustível.
      */

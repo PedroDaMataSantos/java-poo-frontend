@@ -398,7 +398,6 @@ public class TelaPrecoPanel extends JPanel {
         scrollPane.getViewport().setBackground(BG_DARK);
         add(scrollPane, BorderLayout.CENTER);
     }
-
     private void atualizarTabela() {
         new SwingWorker<List<PrecoResponse>, Void>() {
             @Override
@@ -422,10 +421,22 @@ public class TelaPrecoPanel extends JPanel {
                         } catch (Exception ignored) {
                         }
 
+                        // Busca o nome do produto pelo ID
+                        String nomeProduto = "Produto ID: " + p.idProduto();
+                        for (ProdutoResponse prod : produtosDisponiveis) {
+                            if (prod.id().equals(p.idProduto())) {
+                                nomeProduto = prod.nome();
+                                if (prod.tipoProduto() != null) {
+                                    nomeProduto += " - " + prod.tipoProduto().getDescricao();
+                                }
+                                break;
+                            }
+                        }
+
                         tableModel.addRow(new Object[]{
                                 p.id(),
-                                p.idProduto(),
-                                p.valor(),
+                                nomeProduto,  // NOME DO PRODUTO ao invés do ID
+                                "R$ " + p.valor().toString().replace(".", ","),
                                 p.dataAlteracao(),
                                 horaStr
                         });
@@ -441,7 +452,6 @@ public class TelaPrecoPanel extends JPanel {
             }
         }.execute();
     }
-
     private void salvar() {
         ProdutoComboItem itemSelecionado = (ProdutoComboItem) comboProduto.getSelectedItem();
         if (itemSelecionado == null || itemSelecionado.getId() == null) {

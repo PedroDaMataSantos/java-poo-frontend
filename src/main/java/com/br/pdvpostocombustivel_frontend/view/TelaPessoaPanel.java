@@ -117,6 +117,7 @@ public class TelaPessoaPanel extends JPanel {
         comboTipoPessoa.setBackground(FIELD_BG);
         comboTipoPessoa.setForeground(FIELD_FG);
         comboTipoPessoa.setBorder(BorderFactory.createLineBorder(ACCENT));
+        comboTipoPessoa.addActionListener(e -> alterarFormatadorCpfCnpj());
         gbc.gridx = 3; gbc.weightx = 0.3;
         formPanel.add(comboTipoPessoa, gbc);
 
@@ -382,10 +383,25 @@ public class TelaPessoaPanel extends JPanel {
         txtDataNascimento.setText("");
         comboTipoPessoa.setSelectedIndex(0);
         table.clearSelection();
+        alterarFormatadorCpfCnpj();
+    }
+
+    private void alterarFormatadorCpfCnpj() {
+        TipoPessoa tipoSelecionado = (TipoPessoa) comboTipoPessoa.getSelectedItem();
+        String valorAtual = txtCpfCnpj.getText().replaceAll("[^0-9]", "");
+
         try {
-            cpfFormatter.install(txtCpfCnpj);
+            if (tipoSelecionado == TipoPessoa.JURIDICA) {
+                cnpjFormatter.install(txtCpfCnpj);
+            } else {
+                cpfFormatter.install(txtCpfCnpj);
+            }
+
+            if (!valorAtual.isEmpty()) {
+                txtCpfCnpj.setText(valorAtual);
+            }
         } catch (Exception e) {
-            // Ignora
+            System.err.println("Erro ao alternar formatador: " + e.getMessage());
         }
     }
 }
